@@ -6,12 +6,12 @@ import time
 import gettext
 import platform
 import subprocess
-import gi
 import re
 import pathlib
-import fitz
 import uuid
 import shutil
+import PyPDF2
+import gi
 
 if platform.system() == 'Windows':
     import winreg
@@ -91,6 +91,16 @@ class ProgressDialog(Gtk.Dialog):
         fraction = self.current_value / self.max_value
         self.progress.set_fraction(fraction)
         self.progress.set_text(f"{self.current_value}/{self.max_value}")
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+
+    def set_status(self, text):
+        self.label.set_text(text)
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+
+    def pulse(self):
+        self.progress.pulse()
         while Gtk.events_pending():
             Gtk.main_iteration()
 
@@ -316,7 +326,7 @@ class WatermarkApp(Gtk.Window):
         self.output_folder_path = ""
         self.compression_rate = 75
         self.selected_resize = "1280"
-        self.font_size = 20
+        self.font_size = 32
         self.font_base_name = None
         self.watermak_prefix = ""
         self.fili_density = 70
@@ -325,12 +335,12 @@ class WatermarkApp(Gtk.Window):
         self.all_images = []
         self.current_image_index = 0
         self.image_paths = ""
-        self.default_font_description = Pango.FontDescription("Sans 20")
+        self.default_font_description = Pango.FontDescription("Sans 32")
         self.font_color = Gdk.RGBA()
         self.font_color_choosen = False
-        self.font_transparency = 35
+        self.font_transparency = 25
         self.pdf_choosen = False
-        self.init_real_size = 20
+        self.init_real_size = 32
         self.real_fsize = None
         self.pdf_original_dirname = None
         #self.pdf_needs_merge = False
@@ -600,52 +610,7 @@ class WatermarkApp(Gtk.Window):
         file_path = pathlib.Path(file_path_str)
         return file_path.suffix.lower() == '.pdf'
 
-    def convert_pdf_to_images(self, pdf_path, fmt, dpi):
-        """ Converts each page of a PDF file to an image using PyMuPDF. """
-        random = str(uuid.uuid4())
-        tmp_output_folder = os.path.join("/tmp/DIR_converted_pdf_images", random)
-        if not os.path.exists(tmp_output_folder):
-            os.makedirs(tmp_output_folder)
-            print(f"Created output folder: {tmp_output_folder}")
 
-        try:
-            original_filename_base = os.path.splitext(os.path.basename(pdf_path))[0]
-            # We need to know where the PDF is taken from
-            self.pdf_original_dirname = os.path.dirname(pdf_path)
-            doc = fitz.open(pdf_path)
-            print(f"Opened PDF: {pdf_path}")
-
-            zoom = dpi / 72
-            matrix = fitz.Matrix(zoom, zoom)
-            ind = 0
-            win = Gtk.Window()
-            p_dialog = ProgressDialog(win, ("Preparing the PDF"), len(doc))
-            for page_num in range(len(doc)):
-                page = doc.load_page(page_num)  # Load the specific page
-                print(f"Processing page {page_num + 1}/{len(doc)}")
-                pix = page.get_pixmap(matrix=matrix)
-                image_filename = os.path.join(tmp_output_folder, f"{original_filename_base}_page_{page_num + 1}.{fmt}")
-                pix.save(image_filename)
-                print(f"Saved {image_filename}")
-                ind = ind + 1
-                p_dialog.update_progress(ind)
-                self.selected_files_path.append(image_filename)
-
-            # if the pdf contains multiple page we will re-assemble it
-            #if len(doc) > 1:
-            #    prin("Multi page PDF")
-            #    self.pdf_needs_merge = True
-
-            p_dialog.close();
-            doc.close()
-            print(f"\nSuccessfully converted '{pdf_path}' to images in '{tmp_output_folder}' using PyMuPDF.")
-            # remove tmp dir
-            #shutil.rmtree(output_folder)
-
-        except fitz.FileNotFoundError:
-            print(f"Error: PDF file not found at '{pdf_path}'")
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
 
     def on_pdf_toggled(self, button):
         if button.get_active():
@@ -1041,6 +1006,10 @@ class WatermarkApp(Gtk.Window):
             for file in file_paths:
                 print(file.get_path())
 
+            # If we select a PDF, then the output will be automatically a PDF
+            if any(self.check_if_pdf(f) for f in self.selected_files_path):
+                 self.pdf_check.set_active(True)
+
         dialog.destroy()
 
     def update_file_button_text(self):
@@ -1062,12 +1031,6 @@ class WatermarkApp(Gtk.Window):
             warning_dialog.show()
             return
 
-        for image_path in self.selected_files_path:
-            if self.check_if_pdf(image_path):
-                # remove the pdf from the list and create images
-                self.convert_pdf_to_images(image_path, "jpg", 250)
-                self.selected_files_path.remove(image_path)
-
         watermark_text = self.watermark_entry.get_text()
         if not watermark_text:
             warning_dialog = WarningDialog(
@@ -1088,8 +1051,11 @@ class WatermarkApp(Gtk.Window):
         if not self.output_folder_path:
             if self.pdf_original_dirname is not None:
                 self.default_output_dir = self.pdf_original_dirname
-            else:
+            elif self.selected_files_path:
                 self.default_output_dir = os.path.dirname(self.selected_files_path[0])
+            else:
+                 self.default_output_dir = get_xdg_pictures_dir()
+
             if is_running_under_flatpak():
                 # flatpak cause issue to save files, so forcing it to dir xdg pictures
                 self.default_output_dir = get_xdg_pictures_dir()
@@ -1100,20 +1066,28 @@ class WatermarkApp(Gtk.Window):
             if not is_running_under_flatpak():
                 self.output_filechooser_button.set_current_folder(self.output_folder_path)
 
-        win = Gtk.Window()
-        p_dialog = ProgressDialog(win, _("Adding Watermark"), len(self.selected_files_path))
+        p_dialog = ProgressDialog(self, _("Adding Watermark"), len(self.selected_files_path))
 
         try:
             for ind, image_path in enumerate(self.selected_files_path):
-                output_image_path = self.add_watermark_to_image(image_path, self.default_output_dir, watermark_text)
-                if output_image_path:
-                    print("Success", f"Generated File: {os.path.basename(output_image_path)}")
-                    self.all_images.append(output_image_path)
+                p_dialog.set_status(_(f"Processing: {os.path.basename(image_path)}"))
+                if self.check_if_pdf(image_path):
+                     output_file = self.add_watermark_to_pdf(image_path, self.default_output_dir, watermark_text, p_dialog)
+                else:
+                     output_file = self.add_watermark_to_image(image_path, self.default_output_dir, watermark_text, p_dialog)
+
+                if output_file:
+                    print("Success", f"Generated File: {os.path.basename(output_file)}")
+                    self.all_images.append(output_file)
                 p_dialog.update_progress(ind + 1)
 
             p_dialog.close()
-            # If this is a PDF file show list of files
-            if self.all_images[0].lower().endswith('.pdf'):
+            # If list contains PDFs show list of files
+            # Check if any result is PDF
+            has_pdf = any(f.lower().endswith('.pdf') for f in self.all_images)
+
+            if has_pdf:
+                # If we have PDFs, we can't display them in the image viewer (simple viewer)
                 warning_dialog = WarningDialog(
                     title=_("Success"),
                     message=_(f"Generated file(s):\n{self.all_images}"),
@@ -1138,7 +1112,132 @@ class WatermarkApp(Gtk.Window):
         cest_time = time.localtime(now + 3600)
         return cest_time
 
-    def add_watermark_to_image(self, image_path, decided_output_path, text):
+    def create_watermark_layer(self, width, height, text, progress_dialog=None):
+        """ Creates a transparent image with the watermark pattern. """
+        layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+        cest_time = self.get_current_time_ces()
+        try:
+            font = ImageFont.truetype(self.font_base_name, int(self.font_size))
+        except IOError:
+             font = ImageFont.load_default()
+
+        timestamp_str_text = time.strftime('%d %B %Y_%Hh%M', cest_time)
+        if self.date_filename_check.get_active():
+            full_watermark_text = f"{text} {timestamp_str_text}"
+        else:
+            full_watermark_text = f"{text}"
+
+        dummy_draw = ImageDraw.Draw(layer)
+        bbox = dummy_draw.textbbox((0, 0), full_watermark_text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        dpi_from_box = int(self.text_density_scale.get_value())
+        dpi = 201 - dpi_from_box * 2
+        interval_pixels_y = int(dpi)
+        used_positions = set()
+
+        for ydata in range(interval_pixels_y, height, interval_pixels_y):
+            if progress_dialog:
+                progress_dialog.pulse()
+            x_positions = [(xdata % width) for xdata in range(0, width, text_width)]
+
+            for xdata in x_positions:
+                if (xdata, ydata) not in used_positions:
+                    angle = random.uniform(- int(self.rotation_scale.get_value()),
+                                           int(self.rotation_scale.get_value()))
+                    self.font_transp = 100 - self.font_transparency
+                    if self.font_color_choosen is False:
+                        color = (
+                            random.randint(0, 255),
+                            random.randint(0, 255),
+                            random.randint(0, 255),
+                            self.font_transp
+                        )
+                    else:
+                        color = (
+                            int(self.font_color.red * 255),
+                            int(self.font_color.green * 255),
+                            int(self.font_color.blue * 255),
+                            self.font_transp
+                            )
+
+                    temp_image = Image.new('RGBA', (int(text_width * 3), int(text_height * 3)), (0, 0, 0, 0))
+                    temp_draw = ImageDraw.Draw(temp_image)
+                    temp_draw.text((text_width, text_height),
+                                   full_watermark_text, font=font, fill=color)
+                    rotated_text = temp_image.rotate(angle, expand=True)
+                    rotated_text_position = (
+                        xdata + text_width / 2 - rotated_text.width / 2,
+                        ydata + text_height / 2 - rotated_text.height / 2
+                    )
+                    layer.paste(rotated_text, (int(rotated_text_position[0]),
+                                             int(rotated_text_position[1])),
+                              mask=rotated_text)
+                    used_positions.add((xdata, ydata))
+        return layer
+
+    def add_watermark_to_pdf(self, pdf_path, decided_output_path, text, progress_dialog=None):
+        try:
+            reader = PyPDF2.PdfReader(pdf_path)
+            writer = PyPDF2.PdfWriter()
+
+            original_filename = os.path.basename(pdf_path)
+            name_without_ext = os.path.splitext(original_filename)[0]
+
+            cest_time = self.get_current_time_ces()
+            timestamp_str = time.strftime('%Y%m%d_%H%M%S', cest_time)
+
+            fprefix = ""
+            if self.watermark_prefix.get_text() != "":
+                fprefix = self.watermark_prefix.get_text() + "_"
+
+            if self.date_filename_check.get_active():
+                final_filename = f"{fprefix}{text}_{timestamp_str}_{name_without_ext}.pdf"
+            else:
+                final_filename = f"{fprefix}{text}_{name_without_ext}.pdf"
+
+            output_path = os.path.join(decided_output_path, final_filename)
+
+            temp_pdf_dir = os.path.join("/tmp", str(uuid.uuid4()))
+            os.makedirs(temp_pdf_dir, exist_ok=True)
+
+            for i, page in enumerate(reader.pages):
+                if progress_dialog:
+                    progress_dialog.set_status(_(f"Processing page {i+1}..."))
+                    progress_dialog.pulse()
+
+                # Get page size in points (1 point = 1/72 inch)
+                # PIL usually assumes 72 DPI by default for PDF, or we can just map 1 pt = 1 px
+                width = float(page.mediabox.width)
+                height = float(page.mediabox.height)
+
+                # Generate watermark layer
+                # We treat points as pixels for drawing
+                layer_img = self.create_watermark_layer(int(width), int(height), text, progress_dialog)
+
+                # Save layer as PDF
+                temp_layer_path = os.path.join(temp_pdf_dir, f"watermark_{i}.pdf")
+                layer_img.save(temp_layer_path, "PDF")
+
+                # Merge
+                watermark_reader = PyPDF2.PdfReader(temp_layer_path)
+                watermark_page = watermark_reader.pages[0]
+
+                page.merge_page(watermark_page)
+                writer.add_page(page)
+
+            with open(output_path, "wb") as f:
+                writer.write(f)
+
+            shutil.rmtree(temp_pdf_dir)
+            return output_path
+
+        except Exception as err:
+            print(f"Error adding watermark to PDF: {err}")
+            return None
+
+    def add_watermark_to_image(self, image_path, decided_output_path, text, progress_dialog=None):
         try:
             with Image.open(image_path).convert("RGBA") as img:
                 # Resize image if it's too large while preserving aspect ratio
@@ -1156,64 +1255,10 @@ class WatermarkApp(Gtk.Window):
                             )
                         warning_dialog.show()
 
-                draw = ImageDraw.Draw(img)
+                layer = self.create_watermark_layer(img.width, img.height, text, progress_dialog)
+                img.alpha_composite(layer)
+
                 cest_time = self.get_current_time_ces()
-                font = ImageFont.truetype(self.font_base_name, int(self.font_size))
-
-                timestamp_str_text = time.strftime('%d %B %Y_%Hh%M', cest_time)
-                if self.date_filename_check.get_active():
-                    full_watermark_text = f"{text} {timestamp_str_text}"
-                else:
-                    full_watermark_text = f"{text}"
-                bbox = draw.textbbox((0, 0), full_watermark_text, font=font)
-                text_width = bbox[2] - bbox[0]
-                text_height = bbox[3] - bbox[1]
-
-                dpi_from_box = int(self.text_density_scale.get_value())
-                dpi = 201 - dpi_from_box * 2
-                interval_pixels_y = int(dpi)
-                used_positions = set()
-
-                # Draw the continuous watermark across the image
-                for ydata in range(interval_pixels_y, img.height, interval_pixels_y):
-                    x_positions = [(xdata % img.width) for xdata in range(0, img.width, text_width)]
-
-                    for xdata in x_positions:
-                        if (xdata, ydata) not in used_positions:
-                            angle = random.uniform(- int(self.rotation_scale.get_value()),
-                                                   int(self.rotation_scale.get_value()))
-                            self.font_transp = 100 - self.font_transparency
-                            if self.font_color_choosen is False:
-                                color = (
-                                    random.randint(0, 255),
-                                    random.randint(0, 255),
-                                    random.randint(0, 255),
-                                    self.font_transp
-                                )
-                            else:
-                                color = (
-                                    int(self.font_color.red * 255),
-                                    int(self.font_color.green * 255),
-                                    int(self.font_color.blue * 255),
-                                    self.font_transp
-                                    )
-                            rotated_text_img = Image.new('RGBA', img.size)
-                            ImageDraw.Draw(rotated_text_img)
-                            temp_image = Image.new('RGBA', (text_width * 3,
-                                                            text_height * 3), (0, 0, 0, 0))
-                            temp_draw = ImageDraw.Draw(temp_image)
-                            temp_draw.text((text_width, text_height),
-                                           full_watermark_text, font=font, fill=color)
-                            rotated_text = temp_image.rotate(angle, expand=True)
-                            rotated_text_position = (
-                                xdata + text_width / 2 - rotated_text.width / 2,
-                                ydata + text_height / 2 - rotated_text.height / 2
-                            )
-                            img.paste(rotated_text, (int(rotated_text_position[0]),
-                                                     int(rotated_text_position[1])),
-                                      mask=rotated_text)
-                            used_positions.add((xdata, ydata))
-
                 timestamp_str = time.strftime('%Y%m%d_%H%M%S', cest_time)
                 original_filename = os.path.basename(image_path)
                 name_without_ext = os.path.splitext(original_filename)[0]

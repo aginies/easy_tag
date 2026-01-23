@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 4.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-16 16:14+0200\n"
+"POT-Creation-Date: 2026-01-23 13:26+0100\n"
 "PO-Revision-Date: 2025-06-30 14:23+0200\n"
 "Last-Translator: Heimen Stoffels <vistausss@fastmail.com>\n"
 "Language-Team: none\n"
@@ -20,85 +20,85 @@ msgstr ""
 msgid "Processing..."
 msgstr "Bezig met verwerken…"
 
-#: watermark_app_gtk.py:157
+#: watermark_app_gtk.py:167
 msgid "Previous"
 msgstr "Vorige"
 
-#: watermark_app_gtk.py:166
+#: watermark_app_gtk.py:176
 msgid "Next"
 msgstr "Volgende"
 
-#: watermark_app_gtk.py:313
+#: watermark_app_gtk.py:323
 msgid "Watermark App"
 msgstr "Watermerktoepassing"
 
-#: watermark_app_gtk.py:349
+#: watermark_app_gtk.py:359
 msgid "Preferences"
 msgstr "Voorkeuren"
 
-#: watermark_app_gtk.py:354
+#: watermark_app_gtk.py:364
 msgid "Show Expert Options"
 msgstr "Geavanceerde opties tonen"
 
-#: watermark_app_gtk.py:366
+#: watermark_app_gtk.py:376
 msgid "Help"
 msgstr "Hulp"
 
-#: watermark_app_gtk.py:372
+#: watermark_app_gtk.py:382
 msgid "Online Help"
 msgstr "Online-hulp"
 
-#: watermark_app_gtk.py:377
+#: watermark_app_gtk.py:387
 msgid "About App"
 msgstr "Over de toepassing"
 
-#: watermark_app_gtk.py:383
+#: watermark_app_gtk.py:393
 msgid "About Watermark App"
 msgstr "Over Watermerk"
 
-#: watermark_app_gtk.py:391
+#: watermark_app_gtk.py:401
 #, fuzzy
 msgid "Select Image or PDF File(s)"
 msgstr "Kies afbeelding(en)"
 
-#: watermark_app_gtk.py:393
+#: watermark_app_gtk.py:403
 msgid "Choose Files"
 msgstr "Bestanden kiezen"
 
-#: watermark_app_gtk.py:407
+#: watermark_app_gtk.py:417
 msgid "Watermark Text"
 msgstr "Watermerktekst"
 
-#: watermark_app_gtk.py:418
+#: watermark_app_gtk.py:428
 msgid "TTF Font chooser"
 msgstr "Lettertype kiezen"
 
-#: watermark_app_gtk.py:420
+#: watermark_app_gtk.py:430
 msgid "No font selected"
 msgstr "Geen lettertype gekozen"
 
-#: watermark_app_gtk.py:429
+#: watermark_app_gtk.py:439
 msgid "Select Output Folder"
 msgstr "Opslagmap kiezen"
 
-#: watermark_app_gtk.py:446
+#: watermark_app_gtk.py:456
 msgid "Expert Options"
 msgstr "Geavanceerde opties"
 
-#: watermark_app_gtk.py:457
+#: watermark_app_gtk.py:467
 msgid "Angle (degrees)"
 msgstr "Hoek (graden)"
 
-#: watermark_app_gtk.py:463
+#: watermark_app_gtk.py:473
 msgid "Watermark Angle in the image (positive and negative)"
 msgstr "Hoek van het watermerk (positief en negatief)"
 
-#: watermark_app_gtk.py:472
+#: watermark_app_gtk.py:482
 #, fuzzy
 msgid "Transparency (%)"
 msgstr "Doorzichtigheid (%)"
 
-#: watermark_app_gtk.py:479
+#: watermark_app_gtk.py:489
 msgid ""
 "Watermark transparency in the image\n"
 "<b>* 0:</b> No transparency\n"
@@ -108,12 +108,12 @@ msgstr ""
 "<b>* 0:</b> ondoorzichtig\n"
 "<b>* 100:</b> onzichtbaar"
 
-#: watermark_app_gtk.py:488
+#: watermark_app_gtk.py:498
 #, fuzzy
 msgid "Density (%)"
 msgstr "Hoeveelheid (%)"
 
-#: watermark_app_gtk.py:494
+#: watermark_app_gtk.py:504
 #, fuzzy
 msgid ""
 "How many watermark you want\n"
@@ -124,32 +124,32 @@ msgstr ""
 "<b>* 0:</b> geen\n"
 "<b>* 100:</b> afbeelding opvullen"
 
-#: watermark_app_gtk.py:507
+#: watermark_app_gtk.py:517
 msgid "Random Colors"
 msgstr "Willekeurige kleuren"
 
-#: watermark_app_gtk.py:517
+#: watermark_app_gtk.py:527
 msgid "Filename Prefix"
 msgstr "Bestandsextensie"
 
-#: watermark_app_gtk.py:520
+#: watermark_app_gtk.py:530
 msgid "You can add an <b>Extra Prefix</b> to the final filename"
 msgstr "U kunt de bestandsnaam voorzien van een <b>aanvullende extensie</b>"
 
-#: watermark_app_gtk.py:529
+#: watermark_app_gtk.py:539
 msgid "Include Date + Hour"
 msgstr "Datum en tijd tonen"
 
-#: watermark_app_gtk.py:532
+#: watermark_app_gtk.py:542
 msgid ""
 "Add the Date and the Hour in the watermark, include that into the filename"
 msgstr "Voeg de datum en tijd toe aan het watermerk en de bestandsnaam"
 
-#: watermark_app_gtk.py:540
+#: watermark_app_gtk.py:550
 msgid "Resize to"
 msgstr "Grootte aanpassen"
 
-#: watermark_app_gtk.py:542
+#: watermark_app_gtk.py:552
 #, fuzzy
 msgid ""
 "You can <b>resize</b> the original image to another size.\n"
@@ -159,11 +159,11 @@ msgstr ""
 " Let op: deze optie is <b>niet</b> beschikbaar als u voor <b>pdf-bestand</b> "
 "hebt gekozen."
 
-#: watermark_app_gtk.py:555
+#: watermark_app_gtk.py:565
 msgid "JPEG (%)"
 msgstr "Jpeg (%)"
 
-#: watermark_app_gtk.py:562
+#: watermark_app_gtk.py:572
 msgid ""
 "Compression ratio of the generated JPEG Image(s)\n"
 "<b>* 0:</b> None\n"
@@ -173,11 +173,11 @@ msgstr ""
 "<b>* 0:</b> geen\n"
 "<b>* 100:</b> volledig"
 
-#: watermark_app_gtk.py:565
+#: watermark_app_gtk.py:575
 msgid "PDF"
 msgstr "Pdf"
 
-#: watermark_app_gtk.py:566
+#: watermark_app_gtk.py:576
 #, fuzzy
 msgid ""
 "Save the image into a <b>PDF</b> format instead of JPEG.\n"
@@ -186,28 +186,28 @@ msgstr ""
 "Bewaar de afbeelding als <b>pdf</b>-bestand in plaats van als jpeg.\n"
 "Let op: het watermerk is hierdoor niet zichtbaar."
 
-#: watermark_app_gtk.py:581
+#: watermark_app_gtk.py:591
 msgid "Add Watermark"
 msgstr "Watermerk toevoegen"
 
-#: watermark_app_gtk.py:709
+#: watermark_app_gtk.py:674
 msgid "Could not find the default font file, choose another one."
 msgstr "Het standaardlettertype is niet beschikbaar - kies een ander."
 
-#: watermark_app_gtk.py:771
+#: watermark_app_gtk.py:736
 msgid "Choose a TTF Font"
 msgstr "Lettertype kiezen"
 
-#: watermark_app_gtk.py:811
+#: watermark_app_gtk.py:776
 msgid "An error occurred, can't find the font path, please choose another one"
 msgstr "De lettertypelocatie is niet beschikbaar - kies een andere"
 
-#: watermark_app_gtk.py:949
+#: watermark_app_gtk.py:914
 #, fuzzy
 msgid "Watermark App Version 5.0"
 msgstr "Watermerktoepassing versie 4.1"
 
-#: watermark_app_gtk.py:957
+#: watermark_app_gtk.py:922
 #, fuzzy
 msgid ""
 "This app add a Watermark to images or PDF\n"
@@ -218,78 +218,72 @@ msgstr ""
 "Opensourceproject\n"
 "GPL2-licentie"
 
-#: watermark_app_gtk.py:969 watermark_app_gtk.py:985
+#: watermark_app_gtk.py:934 watermark_app_gtk.py:950
 msgid "Close"
 msgstr "Sluiten"
 
-#: watermark_app_gtk.py:976
+#: watermark_app_gtk.py:941
 msgid "help"
 msgstr "Hulp"
 
-#: watermark_app_gtk.py:996
+#: watermark_app_gtk.py:961
 msgid "Image Files"
 msgstr "Afbeeldingsbestanden"
 
-#: watermark_app_gtk.py:1017
+#: watermark_app_gtk.py:982
 msgid "Please choose files"
 msgstr "Kies bestanden"
 
-#: watermark_app_gtk.py:1050
-#, python-brace-format
-msgid ""
-"\n"
-"... and more files selected ({how_many_files})."
-msgstr ""
-"\n"
-"… en {how_many_files} andere bestanden."
-
-#: watermark_app_gtk.py:1051 watermark_app_gtk.py:1054
-#, python-brace-format
-msgid "{selected_files_str}"
-msgstr "{selected_files_str}"
-
-#: watermark_app_gtk.py:1060
+#: watermark_app_gtk.py:1029
 msgid "Please select an image"
 msgstr "Kies een afbeelding"
 
-#: watermark_app_gtk.py:1075
+#: watermark_app_gtk.py:1038
 msgid "Please enter a watermark text"
 msgstr "Voer een watermerktekst in"
 
-#: watermark_app_gtk.py:1083
+#: watermark_app_gtk.py:1046
 msgid "Please Select a Font"
 msgstr "Kies een lettertype"
 
-#: watermark_app_gtk.py:1104
+#: watermark_app_gtk.py:1069
 msgid "Adding Watermark"
 msgstr "Bezig met toevoegen…"
 
-#: watermark_app_gtk.py:1118
+#: watermark_app_gtk.py:1092
 msgid "Success"
 msgstr "Voltooid"
 
-#: watermark_app_gtk.py:1119
 #, python-brace-format
-msgid ""
-"Generated file(s):\n"
-"{self.all_images}"
-msgstr ""
-"Gegenereerd(e) bestand(en):\n"
-"{self.all_images}"
+#~ msgid ""
+#~ "\n"
+#~ "... and more files selected ({how_many_files})."
+#~ msgstr ""
+#~ "\n"
+#~ "… en {how_many_files} andere bestanden."
 
-#: watermark_app_gtk.py:1132
 #, python-brace-format
-msgid "An error occurred during image processing: {err}"
-msgstr "Er is een fout opgetreden tijdens het verwerken: {err}"
+#~ msgid "{selected_files_str}"
+#~ msgstr "{selected_files_str}"
 
-#: watermark_app_gtk.py:1155
 #, python-brace-format
-msgid "Image size is  {img.size}, will not rescale it to {resize_selected}"
-msgstr ""
-"De afbeelding is  {img.size} - de grootte wordt niet aangepast naar "
-"{resize_selected}"
+#~ msgid ""
+#~ "Generated file(s):\n"
+#~ "{self.all_images}"
+#~ msgstr ""
+#~ "Gegenereerd(e) bestand(en):\n"
+#~ "{self.all_images}"
 
-#: watermark_app_gtk.py:1241
 #, python-brace-format
-msgid "An error occurred while adding the watermark: {err}"
-msgstr "Er is een fout opgetreden tijdens het toevoegen: {err}"
+#~ msgid "An error occurred during image processing: {err}"
+#~ msgstr "Er is een fout opgetreden tijdens het verwerken: {err}"
+
+#, python-brace-format
+#~ msgid "Image size is  {img.size}, will not rescale it to {resize_selected}"
+#~ msgstr ""
+#~ "De afbeelding is  {img.size} - de grootte wordt niet aangepast naar "
+#~ "{resize_selected}"
+
+#, python-brace-format
+#~ msgid "An error occurred while adding the watermark: {err}"
+#~ msgstr "Er is een fout opgetreden tijdens het toevoegen: {err}"
