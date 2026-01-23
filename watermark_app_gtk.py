@@ -10,6 +10,7 @@ import re
 import pathlib
 import uuid
 import shutil
+import tempfile
 import PyPDF2
 import gi
 
@@ -343,6 +344,7 @@ class WatermarkApp(Gtk.Window):
         self.init_real_size = 32
         self.real_fsize = None
         self.pdf_original_dirname = None
+        self.preview_window = None
         #self.pdf_needs_merge = False
 
         # Create main vertical box container
@@ -591,7 +593,12 @@ class WatermarkApp(Gtk.Window):
         add_watermark_button = Gtk.Button(label=_("Add Watermark"))
         add_watermark_button.set_hexpand(True)
         add_watermark_button.connect("clicked", self.on_add_watermark_clicked)
-        self.watermarkb_hbox.pack_start(add_watermark_button, False, True, 12)
+
+        self.preview_button = Gtk.Button(label=_("Preview"))
+        self.preview_button.connect("clicked", self.on_preview_clicked)
+
+        self.watermarkb_hbox.pack_start(self.preview_button, False, False, 12)
+        self.watermarkb_hbox.pack_start(add_watermark_button, True, True, 12)
         self.vbox.pack_start(self.watermarkb_hbox, False, False, 3)
 
         # Se default Font
@@ -1072,9 +1079,9 @@ class WatermarkApp(Gtk.Window):
             for ind, image_path in enumerate(self.selected_files_path):
                 p_dialog.set_status(_(f"Processing: {os.path.basename(image_path)}"))
                 if self.check_if_pdf(image_path):
-                     output_file = self.add_watermark_to_pdf(image_path, self.default_output_dir, watermark_text, p_dialog)
+                    output_file = self.add_watermark_to_pdf(image_path, self.default_output_dir, watermark_text, p_dialog)
                 else:
-                     output_file = self.add_watermark_to_image(image_path, self.default_output_dir, watermark_text, p_dialog)
+                    output_file = self.add_watermark_to_image(image_path, self.default_output_dir, watermark_text, p_dialog)
 
                 if output_file:
                     print("Success", f"Generated File: {os.path.basename(output_file)}")
@@ -1107,17 +1114,90 @@ class WatermarkApp(Gtk.Window):
             )
             warning_dialog.show()
 
+    def on_preview_clicked(self, widget):
+        self.generate_preview()
+
+    def on_preview_destroyed(self, widget):
+        self.preview_window = None
+
+    def generate_preview(self):
+        if not self.selected_files_path:
+            warning_dialog = WarningDialog(
+               title="Warning",
+               message=_("Please select an image first"),
+            )
+            warning_dialog.show()
+            return
+
+        file_path = self.selected_files_path[0]
+        if self.check_if_pdf(file_path):
+            # PDF preview not supported
+            if not self.preview_window:
+                warning_dialog = WarningDialog(
+                   title="Warning",
+                   message=_("Preview not supported for PDF files"),
+               )
+               warning_dialog.show()
+            return
+
+        try:
+            # Use a fixed preview max dimension, e.g. 800
+            PREVIEW_MAX = 800
+            with Image.open(file_path).convert("RGBA") as img:
+                width, height = img.size
+                scale = 1.0
+                if max(width, height) > PREVIEW_MAX:
+                    scale = PREVIEW_MAX / max(width, height)
+                    new_size = (int(width * scale), int(height * scale))
+                    img = img.resize(new_size, Image.LANCZOS)
+                else:
+                    new_size = (width, height)
+
+                # Prepare text
+                watermark_text = self.watermark_entry.get_text()
+                if not watermark_text: watermark_text = "Preview"
+
+                # Create layer with scale
+                layer = self.create_watermark_layer(img.width, img.height, watermark_text, scale_factor=scale)
+                img.alpha_composite(layer)
+
+                # Save to temp
+                temp_dir = os.path.join(tempfile.gettempdir(), 'watermark_app')
+                os.makedirs(temp_dir, exist_ok=True)
+                self.preview_temp_path = os.path.join(temp_dir, 'preview.jpg')
+                img.convert("RGB").save(self.preview_temp_path, "JPEG")
+
+                # Create window if needed
+                if not self.preview_window:
+                     self.preview_window = ImageViewerWindow()
+                     self.preview_window.connect("destroy", self.on_preview_destroyed)
+                     self.preview_window.set_title(_("Preview") + " - " + os.path.basename(file_path))
+                     self.preview_window.show_all()
+
+                # Update window
+                if self.preview_window:
+                     # Update title in case file changed
+                     self.preview_window.set_title(_("Preview") + " - " + os.path.basename(file_path))
+                     self.preview_window.load_images([self.preview_temp_path])
+                     self.preview_window.present()
+
+        except Exception as e:
+            print(f"Preview error: {e}")
+
     def get_current_time_ces(self):
         now = time.time()
         cest_time = time.localtime(now + 3600)
         return cest_time
 
-    def create_watermark_layer(self, width, height, text, progress_dialog=None):
+    def create_watermark_layer(self, width, height, text, progress_dialog=None, scale_factor=1.0):
         """ Creates a transparent image with the watermark pattern. """
         layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
         cest_time = self.get_current_time_ces()
         try:
-            font = ImageFont.truetype(self.font_base_name, int(self.font_size))
+            scaled_font_size = int(self.font_size * scale_factor)
+            if scaled_font_size < 1:
+                scaled_font_size = 1
+            font = ImageFont.truetype(self.font_base_name, scaled_font_size)
         except IOError:
              font = ImageFont.load_default()
 
@@ -1133,7 +1213,9 @@ class WatermarkApp(Gtk.Window):
         text_height = bbox[3] - bbox[1]
 
         dpi_from_box = int(self.text_density_scale.get_value())
-        dpi = 201 - dpi_from_box * 2
+        dpi = (201 - dpi_from_box * 2) * scale_factor
+        if dpi < 1:
+            dpi = 1
         interval_pixels_y = int(dpi)
         used_positions = set()
 
