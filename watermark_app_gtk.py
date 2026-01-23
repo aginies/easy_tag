@@ -1136,8 +1136,8 @@ class WatermarkApp(Gtk.Window):
                 warning_dialog = WarningDialog(
                    title="Warning",
                    message=_("Preview not supported for PDF files"),
-               )
-               warning_dialog.show()
+                )
+                warning_dialog.show()
             return
 
         try:
