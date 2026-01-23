@@ -35,7 +35,7 @@ This app is in Python GTK3.
 
 * pillow
 * gobject
-* PyMuPDF
+* PyPDF2
 
 # watermark_app_gtk.py
 
