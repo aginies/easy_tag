@@ -14,24 +14,30 @@ import tempfile
 import PyPDF2
 import gi
 
-if platform.system() == 'Windows':
+if platform.system() == "Windows":
     import winreg
-    if getattr(sys, 'frozen', False):
+
+    if getattr(sys, "frozen", False):
         import pyi_splash
 
 from PIL import Image, ImageDraw, ImageFont
-gi.require_version('Gtk', '3.0')
+
+gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GdkPixbuf, Gio, Pango, GLib, Gdk
 
-def is_running_under_flatpak():
-    return 'FLATPAK_ID' in os.environ
 
-if platform.system() == 'Windows':
+def is_running_under_flatpak():
+    return "FLATPAK_ID" in os.environ
+
+
+if platform.system() == "Windows":
     key_path = r"Control Panel\International"
     with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path) as key:
         locale_name, reg_type = winreg.QueryValueEx(key, "LocaleName")
-        lang_code = locale_name.split('-')[0].lower()
-        print(f"Windows: Detected language from registry: {lang_code} (full tag: {locale_name})")
+        lang_code = locale_name.split("-")[0].lower()
+        print(
+            f"Windows: Detected language from registry: {lang_code} (full tag: {locale_name})"
+        )
         ldir = sys._MEIPASS + "/share/locale"
 elif is_running_under_flatpak():
     ldir = "/app/share/locale"
@@ -43,12 +49,15 @@ else:
         # Devel version from git
         ldir = "locale"
 
-if platform.system() == 'Windows':
+if platform.system() == "Windows":
     # For Windows operating system do the translation based on the system registry
-    trans = gettext.translation("watermark_app_gtk", ldir, languages=[lang_code], fallback=True)
+    trans = gettext.translation(
+        "watermark_app_gtk", ldir, languages=[lang_code], fallback=True
+    )
     trans.install()
 else:
-    gettext.install('watermark_app_gtk', localedir=ldir)
+    gettext.install("watermark_app_gtk", localedir=ldir)
+
 
 def get_xdg_pictures_dir():
     """
@@ -57,10 +66,7 @@ def get_xdg_pictures_dir():
     """
     try:
         result = subprocess.run(
-            ["xdg-user-dir", "PICTURES"],
-            capture_output=True,
-            text=True,
-            check=True
+            ["xdg-user-dir", "PICTURES"], capture_output=True, text=True, check=True
         )
         path = result.stdout.strip()
         if path:
@@ -69,6 +75,7 @@ def get_xdg_pictures_dir():
                 return pictures_dir
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
+
 
 class ProgressDialog(Gtk.Dialog):
     def __init__(self, parent, title, max_value):
@@ -108,6 +115,7 @@ class ProgressDialog(Gtk.Dialog):
     def close(self):
         self.destroy()
 
+
 class WarningDialog:
     def __init__(self, title=None, message="", parent=None):
         self.title = title or "Warning"
@@ -116,14 +124,14 @@ class WarningDialog:
         self.dialog = None
 
     def show(self):
-        """ Create the warning dialog if it doesn't exist yet"""
+        """Create the warning dialog if it doesn't exist yet"""
         if not self.dialog:
             self.dialog = Gtk.MessageDialog(
                 transient_for=self.parent,
                 flags=0,
                 message_type=Gtk.MessageType.WARNING,
                 buttons=Gtk.ButtonsType.OK,
-                text=self.title
+                text=self.title,
             )
             self.dialog.format_secondary_text(self.message)
             self.dialog.set_default_size(400, 200)
@@ -138,6 +146,7 @@ class WarningDialog:
         if self.dialog:
             self.dialog.destroy()
             self.dialog = None
+
 
 class ImageViewerWindow(Gtk.Window):
     def __init__(self):
@@ -208,14 +217,16 @@ class ImageViewerWindow(Gtk.Window):
         scale_factor = min(width_ratio, height_ratio)
         new_width = int(img_width * scale_factor)
         new_height = int(img_height * scale_factor)
-        scaled_pixbuf = pixbuf.scale_simple(new_width, new_height, GdkPixbuf.InterpType.HYPER)
+        scaled_pixbuf = pixbuf.scale_simple(
+            new_width, new_height, GdkPixbuf.InterpType.HYPER
+        )
 
-        if hasattr(self, 'image_widget') and self.image_widget is not None:
+        if hasattr(self, "image_widget") and self.image_widget is not None:
             # Remove the old image widget from its container
             self.vbox.remove(self.image_widget)
             self.image_widget = None
 
-        if hasattr(self, 'image_label') and self.image_label is not None:
+        if hasattr(self, "image_label") and self.image_label is not None:
             # Remove the old image label from its container
             self.vbox.remove(self.image_label)
             self.image_label = None
@@ -297,7 +308,9 @@ class ImageViewerWindow(Gtk.Window):
         dialog.add_button("_Save", Gtk.ResponseType.ACCEPT)
 
         # Set the default file name to the current image name
-        dialog.set_current_name(Gio.file_new_for_path(current_image_path).get_basename())
+        dialog.set_current_name(
+            Gio.file_new_for_path(current_image_path).get_basename()
+        )
         dialog.set_current_folder(os.path.dirname(current_image_path))
         response = dialog.run()
 
@@ -307,10 +320,7 @@ class ImageViewerWindow(Gtk.Window):
                 source_file = Gio.File.new_for_path(current_image_path)
                 destination_file = Gio.File.new_for_path(dialog.get_filename())
                 source_file.copy(
-                    destination_file,
-                    Gio.FileCopyFlags.OVERWRITE,
-                    None,
-                    None
+                    destination_file, Gio.FileCopyFlags.OVERWRITE, None, None
                 )
                 print("Image saved to:", dialog.get_filename())
             except Exception as err:
@@ -318,8 +328,10 @@ class ImageViewerWindow(Gtk.Window):
 
         dialog.destroy()
 
+
 class WatermarkApp(Gtk.Window):
-    """  Main app"""
+    """Main app"""
+
     def __init__(self):
         Gtk.Window.__init__(self, title=_("Watermark App"))
         self.set_default_size(450, 100)
@@ -336,7 +348,7 @@ class WatermarkApp(Gtk.Window):
         self.all_images = []
         self.current_image_index = 0
         self.image_paths = ""
-        self.default_font_description = Pango.FontDescription("Sans 32")
+        self.default_font_description = Pango.FontDescription.from_string("Sans 32")
         self.font_color = Gdk.RGBA()
         self.font_color_choosen = False
         self.font_transparency = 25
@@ -345,7 +357,7 @@ class WatermarkApp(Gtk.Window):
         self.real_fsize = None
         self.pdf_original_dirname = None
         self.preview_window = None
-        #self.pdf_needs_merge = False
+        # self.pdf_needs_merge = False
 
         # Create main vertical box container
         self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
@@ -369,9 +381,9 @@ class WatermarkApp(Gtk.Window):
         pref_menu.append(self.expert_options_check)
 
         # Create a check menu item to toggle Auto save Images options
-        #self.autosave_options_check = Gtk.CheckMenuItem(label="Auto Save Images")
-        #self.autosave_options_check.set_active(True)
-        #pref_menu.append(self.autosave_options_check)
+        # self.autosave_options_check = Gtk.CheckMenuItem(label="Auto Save Images")
+        # self.autosave_options_check.set_active(True)
+        # pref_menu.append(self.autosave_options_check)
         pref_menu_item.set_submenu(pref_menu)
 
         # Create "Help" menu with cascading items
@@ -425,7 +437,7 @@ class WatermarkApp(Gtk.Window):
         watermark_hbox.pack_end(self.watermark_entry, False, False, 12)
         self.vbox.pack_start(watermark_hbox, False, False, 3)
 
-	# Font Chooser
+        # Font Chooser
         font_chooser_hbox = Gtk.Box(spacing=3)
         font_chooser_label = Gtk.Label(label=_("TTF Font chooser"))
         self.font_chooser_button = Gtk.Button()
@@ -449,30 +461,40 @@ class WatermarkApp(Gtk.Window):
         output_hbox.pack_end(self.output_filechooser_button, False, False, 12)
         if is_running_under_flatpak():
             print("Runing under a flatpak sandbox environement")
-            with open('DONT_SAVE_HERE', 'w') as f:
-                f.write('This is a reminder not to save files here.')
+            with open("DONT_SAVE_HERE", "w") as f:
+                f.write("This is a reminder not to save files here.")
         else:
             self.vbox.pack_start(output_hbox, False, False, 3)
 
         # Expert options section
         expert_text = _("Expert Options")
-        self.expert_options_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        self.expert_options_frame = Gtk.Frame(label="<b> "+expert_text+"</b>")
+        self.expert_options_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL, spacing=6
+        )
+        self.expert_options_frame = Gtk.Frame(label="<b> " + expert_text + "</b>")
         self.expert_options_frame.get_label_widget().set_use_markup(True)
         self.expert_options_frame.set_margin_start(12)
         self.expert_options_frame.set_margin_end(12)
-        #self.expert_options_frame.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
+        # self.expert_options_frame.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
         self.expert_options_frame.add(self.expert_options_box)
 
         # Rotation angle
         rotation_hbox = Gtk.Box(spacing=3)
         rotation_label = Gtk.Label(label=_("Angle (degrees)"))
-        adjustment_rotation = Gtk.Adjustment(value=self.rotation_angle,
-                                             lower=0, upper=90, step_increment=1, page_increment=4)
-        self.rotation_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL,
-                                        adjustment=adjustment_rotation)
+        adjustment_rotation = Gtk.Adjustment(
+            value=self.rotation_angle,
+            lower=0,
+            upper=90,
+            step_increment=1,
+            page_increment=4,
+        )
+        self.rotation_scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL, adjustment=adjustment_rotation
+        )
         self.rotation_scale.set_digits(0)
-        self.rotation_scale.set_tooltip_text(_("Watermark Angle in the image (positive and negative)"))
+        self.rotation_scale.set_tooltip_text(
+            _("Watermark Angle in the image (positive and negative)")
+        )
         self.rotation_scale.connect("value-changed", self.on_rotation_angle_changed)
         button_size_group.add_widget(self.rotation_scale)
         rotation_hbox.pack_start(rotation_label, False, False, 12)
@@ -482,13 +504,23 @@ class WatermarkApp(Gtk.Window):
         # Font Transparency
         transparency_hbox = Gtk.Box(spacing=3)
         transparency_label = Gtk.Label(label=_("Transparency (%)"))
-        adjustment_transparency = Gtk.Adjustment(value=self.font_transparency, lower=0,
-                                                 upper=100, step_increment=1, page_increment=10)
-        self.transparency_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL,
-                                            adjustment=adjustment_transparency)
+        adjustment_transparency = Gtk.Adjustment(
+            value=self.font_transparency,
+            lower=0,
+            upper=100,
+            step_increment=1,
+            page_increment=10,
+        )
+        self.transparency_scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL, adjustment=adjustment_transparency
+        )
         self.transparency_scale.set_digits(0)
         self.transparency_scale.set_inverted(False)
-        self.transparency_scale.set_tooltip_markup(_("Watermark transparency in the image\n<b>* 0:</b> No transparency\n<b>* 100:</b> Invisible"))
+        self.transparency_scale.set_tooltip_markup(
+            _(
+                "Watermark transparency in the image\n<b>* 0:</b> No transparency\n<b>* 100:</b> Invisible"
+            )
+        )
         self.transparency_scale.connect("value-changed", self.on_transparency_changed)
         button_size_group.add_widget(self.transparency_scale)
         transparency_hbox.pack_start(transparency_label, False, False, 12)
@@ -498,14 +530,26 @@ class WatermarkApp(Gtk.Window):
         # Font density
         density_hbox = Gtk.Box(spacing=3)
         density_label = Gtk.Label(label=_("Density (%)"))
-        adjustment_density = Gtk.Adjustment(value=self.fili_density, lower=1,
-                                            upper=100, step_increment=1, page_increment=10)
-        self.text_density_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL,
-                                            adjustment=adjustment_density)
+        adjustment_density = Gtk.Adjustment(
+            value=self.fili_density,
+            lower=1,
+            upper=100,
+            step_increment=1,
+            page_increment=10,
+        )
+        self.text_density_scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL, adjustment=adjustment_density
+        )
         self.text_density_scale.set_digits(0)
-        self.text_density_scale.set_tooltip_markup(_("How many watermark you want\n<b>* 0:</b> None\n<b>* 100:</b> Fill the image"))
+        self.text_density_scale.set_tooltip_markup(
+            _(
+                "How many watermark you want\n<b>* 0:</b> None\n<b>* 100:</b> Fill the image"
+            )
+        )
         self.text_density_scale.set_inverted(False)
-        self.text_density_scale.connect("value-changed", self.on_rotation_density_changed)
+        self.text_density_scale.connect(
+            "value-changed", self.on_rotation_density_changed
+        )
         button_size_group.add_widget(self.text_density_scale)
         density_hbox.pack_start(density_label, False, False, 12)
         density_hbox.pack_end(self.text_density_scale, False, False, 12)
@@ -529,7 +573,9 @@ class WatermarkApp(Gtk.Window):
         prefix_text = _("Filename Prefix")
         prefix_filename_label = Gtk.Label(label=prefix_text)
         self.watermark_prefix = Gtk.Entry()
-        self.watermark_prefix.set_tooltip_markup(_("You can add an <b>Extra Prefix</b> to the final filename"))
+        self.watermark_prefix.set_tooltip_markup(
+            _("You can add an <b>Extra Prefix</b> to the final filename")
+        )
         self.watermark_prefix.set_placeholder_text(prefix_text)
         button_size_group.add_widget(self.watermark_prefix)
         prefix_filename_hbox.pack_start(prefix_filename_label, False, False, 12)
@@ -541,7 +587,11 @@ class WatermarkApp(Gtk.Window):
         date_filename_label = Gtk.Label(label=_("Include Date + Hour"))
         self.date_filename_check = Gtk.CheckButton()
         self.date_filename_check.set_active(True)
-        self.date_filename_check.set_tooltip_text(_("Add the Date and the Hour in the watermark, include that into the filename"))
+        self.date_filename_check.set_tooltip_text(
+            _(
+                "Add the Date and the Hour in the watermark, include that into the filename"
+            )
+        )
         button_size_group.add_widget(self.date_filename_check)
         date_filename_hbox.pack_start(date_filename_label, False, False, 12)
         date_filename_hbox.pack_end(self.date_filename_check, False, False, 12)
@@ -551,8 +601,21 @@ class WatermarkApp(Gtk.Window):
         self.resize_hbox = Gtk.Box(spacing=3)
         resize_label = Gtk.Label(label=_("Resize to"))
         self.list_size = Gtk.ComboBoxText()
-        self.list_size.set_tooltip_markup(_("You can <b>resize</b> the original image to another size.\nThis option is not available if you choose PDF output format."))
-        elements = ["None", "320", "640", "800", "1024", "1280", "1600", "2048",]
+        self.list_size.set_tooltip_markup(
+            _(
+                "You can <b>resize</b> the original image to another size.\nThis option is not available if you choose PDF output format."
+            )
+        )
+        elements = [
+            "None",
+            "320",
+            "640",
+            "800",
+            "1024",
+            "1280",
+            "1600",
+            "2048",
+        ]
         for text in elements:
             self.list_size.append_text(text)
         self.list_size.set_active(0)
@@ -562,20 +625,33 @@ class WatermarkApp(Gtk.Window):
         self.resize_hbox.pack_end(self.list_size, False, False, 12)
         self.expert_options_box.pack_start(self.resize_hbox, False, False, 3)
 
-	# Output PDF or JPEG Compression level
+        # Output PDF or JPEG Compression level
         output_hbox = Gtk.Box(spacing=3)
         self.compression_rate_label = Gtk.Label(label=_("JPEG (%)"))
-        adjustment_compression = Gtk.Adjustment(value=self.compression_rate,
-                                                lower=0, upper=100, step_increment=1,
-                                                page_increment=10)
-        self.compression_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL,
-                                           adjustment=adjustment_compression)
+        adjustment_compression = Gtk.Adjustment(
+            value=self.compression_rate,
+            lower=0,
+            upper=100,
+            step_increment=1,
+            page_increment=10,
+        )
+        self.compression_scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL, adjustment=adjustment_compression
+        )
         self.compression_scale.set_digits(0)
-        self.compression_scale.set_tooltip_markup(_("Compression ratio of the generated JPEG Image(s)\n<b>* 0:</b> None\n<b>* 100:</b> Full compression"))
+        self.compression_scale.set_tooltip_markup(
+            _(
+                "Compression ratio of the generated JPEG Image(s)\n<b>* 0:</b> None\n<b>* 100:</b> Full compression"
+            )
+        )
         self.compression_scale.connect("value-changed", self.on_compression_changed)
         button_size_group.add_widget(self.compression_scale)
         self.pdf_check = Gtk.CheckButton(label=_("PDF"))
-        self.pdf_check.set_tooltip_markup(_("Save the image into a <b>PDF</b> format instead of JPEG.\nThere is <b>No view</b> of the watermarked file <b>in PDF</b> format."))
+        self.pdf_check.set_tooltip_markup(
+            _(
+                "Save the image into a <b>PDF</b> format instead of JPEG.\nThere is <b>No view</b> of the watermarked file <b>in PDF</b> format."
+            )
+        )
         self.pdf_check.connect("toggled", self.on_pdf_toggled)
         self.pdf_check.set_active(False)
         self.compression_scale.set_sensitive(True)
@@ -585,8 +661,8 @@ class WatermarkApp(Gtk.Window):
         output_hbox.pack_end(self.compression_rate_label, False, False, 12)
         self.expert_options_box.pack_start(output_hbox, False, False, 3)
 
-        #self.vbox.pack_start(self.expert_options_box, False, False, 12)
-        #self.expert_options_box.hide()
+        # self.vbox.pack_start(self.expert_options_box, False, False, 12)
+        # self.expert_options_box.hide()
 
         # Add watermark button horizontal box
         self.watermarkb_hbox = Gtk.Box(spacing=3)
@@ -602,22 +678,20 @@ class WatermarkApp(Gtk.Window):
         self.vbox.pack_start(self.watermarkb_hbox, False, False, 3)
 
         # Se default Font
-        if platform.system() != 'Windows':
-             #print("populating ALL_LINUX_TTF_FONT_DATA")
+        if platform.system() != "Windows":
+            # print("populating ALL_LINUX_TTF_FONT_DATA")
             self.ALL_LINUX_TTF_FONT_DATA = self.get_ttf_fonts()
         self.set_default_font()
 
-        if platform.system() == 'Windows':
-            if getattr(sys, 'frozen', False) and 'pyi_splash' in sys.modules:
+        if platform.system() == "Windows":
+            if getattr(sys, "frozen", False) and "pyi_splash" in sys.modules:
                 if pyi_splash.is_alive():
                     pyi_splash.close()
 
     def check_if_pdf(self, file_path_str: str) -> bool:
-        """ Checks if a file path has a '.pdf' extension using pathlib.Path.suffix."""
+        """Checks if a file path has a '.pdf' extension using pathlib.Path.suffix."""
         file_path = pathlib.Path(file_path_str)
-        return file_path.suffix.lower() == '.pdf'
-
-
+        return file_path.suffix.lower() == ".pdf"
 
     def on_pdf_toggled(self, button):
         if button.get_active():
@@ -641,49 +715,59 @@ class WatermarkApp(Gtk.Window):
 
     def on_color_button_set(self, button):
         self.font_color = button.get_rgba()
-        print(f"Selected color: {self.font_color.red}, {self.font_color.green}, {self.font_color.blue}, {self.font_color.alpha}")
+        print(
+            f"Selected color: {self.font_color.red}, {self.font_color.green}, {self.font_color.blue}, {self.font_color.alpha}"
+        )
         self.font_color_choosen = True
 
     def set_default_font(self):
-        if platform.system() == 'Windows':
-            self.default_font_description = Pango.FontDescription("Arial 20")
+        if platform.system() == "Windows":
+            self.default_font_description = Pango.FontDescription.from_string(
+                "Arial 20"
+            )
             self.font_base_name = "arial.ttf"
             self.font_chooser_button.set_label("Arial 20")
             print("Default font set to Arial on Windows.")
         else:
-            self.default_font_description = Pango.FontDescription("DejaVu Sans 20") #vtks Rude Metal shadow 12") #DejaVu Sans 20")
+            self.default_font_description = Pango.FontDescription.from_string(
+                "DejaVu Sans 20"
+            )  # vtks Rude Metal shadow 12") #DejaVu Sans 20")
             font_desc_str = self.default_font_description.to_string()
             font_path = self.find_font_file(self.default_font_description)
-            #if is_running_under_flatpak():
+            # if is_running_under_flatpak():
             #    # Dont select default font in sanbox env, force user select one
             #    print("Dont select default font in sanbox env, force user select one")
             #    self.font_chooser_button.set_label(_("No font selected"))
             #    return
 
             if font_path:
-                self.font_base_name = font_path.split('.ttf')[0] + '.ttf'
+                self.font_base_name = font_path.split(".ttf")[0] + ".ttf"
                 print(f"Font name: {self.font_base_name}")
                 parts_desc = font_desc_str.split()
                 self.font_size = int(parts_desc[-1]) if parts_desc else None
                 temp_font = self.default_font_description
-                temp_font.set_size(12* Pango.SCALE)
+                temp_font.set_size(12 * Pango.SCALE)
                 temp_font_desc_str = temp_font.to_string()
                 label = self.font_chooser_button.get_child()
                 label.set_text(font_desc_str)
                 label.override_font(temp_font)
                 # Force default font Size to 20
-                self.default_font_description.set_size(self.init_real_size * Pango.SCALE)
-                #self.font_chooser_button.set_label(font_desc_str)
+                self.default_font_description.set_size(
+                    self.init_real_size * Pango.SCALE
+                )
+                # self.font_chooser_button.set_label(font_desc_str)
             else:
                 print("Could not find the default font file.")
                 warning_dialog = WarningDialog(
                     title="Error",
-                    message=_("Could not find the default font file, choose another one."),
-                    )
+                    message=_(
+                        "Could not find the default font file, choose another one."
+                    ),
+                )
                 warning_dialog.show()
 
     def get_style_string(self, style):
-        """ Return readable style"""
+        """Return readable style"""
         if style == Pango.Style.NORMAL:
             return "Regular"
         elif style == Pango.Style.ITALIC:
@@ -694,9 +778,9 @@ class WatermarkApp(Gtk.Window):
             return "Unknown"
 
     def get_ttf_fonts(self):
-        """ Scans the system for all TTF fonts using the 'fc-list' command-line tool."""
+        """Scans the system for all TTF fonts using the 'fc-list' command-line tool."""
         ttf_fonts_data = []
-        if not os.path.exists('/usr/bin/fc-list'):
+        if not os.path.exists("/usr/bin/fc-list"):
             print("Warning: 'fc-list' command not found. Font filtering will not work.")
             print("Please install the 'fontconfig' package.")
             return ttf_fonts_data
@@ -704,22 +788,24 @@ class WatermarkApp(Gtk.Window):
         try:
             # We ask fc-list for three fields for each font: file, family, and style.
             # The style from fc-list (e.g., "Bold", "Italic") corresponds to Pango's face name.
-            command = ['fc-list', '-f', '%{file}|%{family}|%{style}\n']
-            output = subprocess.check_output(command).decode('utf-8')
-            for line in output.strip().split('\n'):
+            command = ["fc-list", "-f", "%{file}|%{family}|%{style}\n"]
+            output = subprocess.check_output(command).decode("utf-8")
+            for line in output.strip().split("\n"):
                 try:
-                    parts = line.split('|')
-                    #print(parts)
+                    parts = line.split("|")
+                    # print(parts)
                     if len(parts) == 3:
                         filepath, family, style = parts
 
-                    if filepath.lower().endswith('.ttf'):
-                        cleaned_family = family.split(',')[0].strip()
-                        ttf_fonts_data.append({
-                            'file': filepath,
-                            'family': cleaned_family,
-                            'style': style.strip()
-                        })
+                    if filepath.lower().endswith(".ttf"):
+                        cleaned_family = family.split(",")[0].strip()
+                        ttf_fonts_data.append(
+                            {
+                                "file": filepath,
+                                "family": cleaned_family,
+                                "style": style.strip(),
+                            }
+                        )
 
                 except ValueError:
                     continue
@@ -730,21 +816,23 @@ class WatermarkApp(Gtk.Window):
         return ttf_fonts_data
 
     def font_filter_func(self, family, face, data):
-        """ The filter function passed to the Gtk.FontChooser. """
+        """The filter function passed to the Gtk.FontChooser."""
         family_name = family.get_name()
         face_name = face.get_face_name()
         for font_data in self.ALL_LINUX_TTF_FONT_DATA:
-            if font_data['family'] == family_name and font_data['style'] == face_name:
+            if font_data["family"] == family_name and font_data["style"] == face_name:
                 return True
 
         return False
 
     def on_font_selected(self, widget):
-        dialog = Gtk.FontChooserDialog(title=_("Choose a TTF Font"), transient_for=self, flags=0)
+        dialog = Gtk.FontChooserDialog(
+            title=_("Choose a TTF Font"), transient_for=self, flags=0
+        )
         if self.real_fsize is not None:
             self.default_font_description.set_size(self.real_fsize)
         dialog.set_font_desc(self.default_font_description)
-        if platform.system() != 'Windows':
+        if platform.system() != "Windows":
             if self.ALL_LINUX_TTF_FONT_DATA:
                 dialog.set_filter_func(self.font_filter_func, None)
             else:
@@ -759,7 +847,7 @@ class WatermarkApp(Gtk.Window):
                 font_path = self.find_font_file(font_desc)
                 self.real_fsize = font_desc.get_size()
                 font_desc_str = font_desc.to_string()
-                self.font_size = int(font_desc.get_size()/1024)
+                self.font_size = int(font_desc.get_size() / 1024)
                 print(f"Selected Font is: {font_desc_str}\nFile: {font_path}")
 
                 if font_path:
@@ -767,7 +855,7 @@ class WatermarkApp(Gtk.Window):
                     # Temp font to display the font in the button
                     temp_font = font_desc
                     # Temp font size will be the same with a smaller size set to 12
-                    temp_font.set_size(12* Pango.SCALE)
+                    temp_font.set_size(12 * Pango.SCALE)
                     label = self.font_chooser_button.get_child()
                     # use the original font description string, so correct font size
                     label.set_text(font_desc_str)
@@ -780,7 +868,9 @@ class WatermarkApp(Gtk.Window):
                     print("Could not find the font file.")
                     warning_dialog = WarningDialog(
                         title="Error",
-                        message=_("An error occurred, can't find the font path, please choose another one"),
+                        message=_(
+                            "An error occurred, can't find the font path, please choose another one"
+                        ),
                     )
                     warning_dialog.show()
 
@@ -794,7 +884,7 @@ class WatermarkApp(Gtk.Window):
         Try to find the font file for a given Pango font description.
         Uses `fc-list` on Unix-like systems and Windows Registry on Windows.
         """
-        if platform.system() == 'Windows':
+        if platform.system() == "Windows":
             return self.find_font_file_windows(font_desc)
         return self.find_font_file_unix(font_desc)
 
@@ -807,7 +897,10 @@ class WatermarkApp(Gtk.Window):
             font_family = font_desc.get_family()
         try:
             # Open the Windows Registry key for installed fonts
-            registry_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts")
+            registry_key = winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",
+            )
 
             # Iterate through the registry keys to find the font family
             for i in range(winreg.QueryInfoKey(registry_key)[1]):
@@ -835,35 +928,36 @@ class WatermarkApp(Gtk.Window):
 
             # List of All font We want, at the end will select the first of the list (should be only one...)
             list_all_font = []
+
             def find_family(family):
-                """ Find all font with correct familly"""
+                """Find all font with correct familly"""
                 all_font_family = []
                 for font_data in self.ALL_LINUX_TTF_FONT_DATA:
-                    if font_data['family'] == family:
+                    if font_data["family"] == family:
                         all_font_family.append(font_data)
                 return all_font_family
-     
+
             # List all font font with correct family
             all_font_family_selected = find_family(family)
             list_all_font = all_font_family_selected
 
             def find_bold_in(list):
-                """ Find all font Bold from a list"""
+                """Find all font Bold from a list"""
                 bold_font_list = []
                 non_bold_font_list = []
                 for font_data in list:
-                    if re.search("Bold", font_data['style']):
+                    if re.search("Bold", font_data["style"]):
                         bold_font_list.append(font_data)
                     else:
                         non_bold_font_list.append(font_data)
                 return bold_font_list, non_bold_font_list
 
             def find_italic_in(list):
-                """ Find all font italic from a list"""
+                """Find all font italic from a list"""
                 italic_font_list = []
                 non_italic_font_list = []
                 for font_data in list:
-                    if re.search("Italic", font_data['style']):
+                    if re.search("Italic", font_data["style"]):
                         italic_font_list.append(font_data)
                     else:
                         non_italic_font_list.append(font_data)
@@ -882,7 +976,7 @@ class WatermarkApp(Gtk.Window):
                 list_all_font = non_italic_font_list
 
             if list_all_font:
-                font_path = list_all_font[0]['file']
+                font_path = list_all_font[0]["file"]
                 return font_path
             else:
                 print("List empty... so it didnt find the font file!")
@@ -912,12 +1006,12 @@ class WatermarkApp(Gtk.Window):
         else:
             if self.expert_options_box.get_parent() is not None:
                 self.expert_options_frame.hide()
-                #self.vbox.pack_start(self.watermarkb_hbox, False, False, 3)
+                # self.vbox.pack_start(self.watermarkb_hbox, False, False, 3)
                 self.vbox.remove(self.expert_options_frame)
                 self.resize(210, 110)
 
     def about_dialog(self, widget):
-        """ Create a custom dialog window for the About section with a clickable link"""
+        """Create a custom dialog window for the About section with a clickable link"""
         about_window = Gtk.Window(title=_("Watermark App Version 5.0"))
         about_window.set_default_size(400, 200)
         about_window.set_position(Gtk.WindowPosition.CENTER)
@@ -934,8 +1028,10 @@ class WatermarkApp(Gtk.Window):
         vbox.pack_start(label, True, True, 3)
 
         # Create a clickable hyperlink using GtkLinkButton
-        github_link = Gtk.LinkButton.new_with_label("https://github.com/aginies/watermark",
-                                                    "https://github.com/aginies/watermark")
+        github_link = Gtk.LinkButton.new_with_label(
+            "https://github.com/aginies/watermark",
+            "https://github.com/aginies/watermark",
+        )
         vbox.pack_start(github_link, False, False, 3)
 
         close_button = Gtk.Button(label=_("Close"))
@@ -944,20 +1040,22 @@ class WatermarkApp(Gtk.Window):
         about_window.show_all()
 
     def help_dialog(self, widget):
-        """ Create a custom dialog window for the Help section with a clickable link"""
+        """Create a custom dialog window for the Help section with a clickable link"""
         help_window = Gtk.Window(title=_("help"))
         help_window.set_default_size(100, 100)
         help_window.set_position(Gtk.WindowPosition.CENTER)
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
         help_window.add(vbox)
 
-        github_link = Gtk.LinkButton.new_with_label("https://github.com/aginies/watermark/blob/main/README.md",
-                                                    "Online information")
+        github_link = Gtk.LinkButton.new_with_label(
+            "https://github.com/aginies/watermark/blob/main/README.md",
+            "Online information",
+        )
         vbox.pack_start(github_link, False, False, 3)
         close_button = Gtk.Button(label=_("Close"))
         close_button.connect("clicked", lambda btn: help_window.destroy())
         vbox.pack_end(close_button, False, False, 3)
-        help_window.show_all()        
+        help_window.show_all()
 
     def main_display_images(self, image_path):
         app = ImageViewerWindow()
@@ -984,11 +1082,11 @@ class WatermarkApp(Gtk.Window):
         return filter_img
 
     def on_files_clicked(self, widget):
-        """ Create a file chooser dialog with multiple selection option"""
+        """Create a file chooser dialog with multiple selection option"""
         dialog = Gtk.FileChooserNative.new(
             title=_("Please choose files"),
             parent=self,
-            action=Gtk.FileChooserAction.OPEN
+            action=Gtk.FileChooserAction.OPEN,
         )
 
         dialog.set_select_multiple(True)
@@ -1015,18 +1113,24 @@ class WatermarkApp(Gtk.Window):
 
             # If we select a PDF, then the output will be automatically a PDF
             if any(self.check_if_pdf(f) for f in self.selected_files_path):
-                 self.pdf_check.set_active(True)
+                self.pdf_check.set_active(True)
 
         dialog.destroy()
 
     def update_file_button_text(self):
         how_many_files = len(self.selected_files_path)
         if how_many_files > 3:
-            selected_files_str = "\n".join(os.path.basename(path) for path in self.selected_files_path[:3])
-            selected_files_str += _(f"\n... and more files selected ({how_many_files}).")
+            selected_files_str = "\n".join(
+                os.path.basename(path) for path in self.selected_files_path[:3]
+            )
+            selected_files_str += _(
+                f"\n... and more files selected ({how_many_files})."
+            )
             self.files_label.set_text(_(f"{selected_files_str}"))
         else:
-            selected_files_str = "\n".join(os.path.basename(path) for path in self.selected_files_path)
+            selected_files_str = "\n".join(
+                os.path.basename(path) for path in self.selected_files_path
+            )
             self.files_label.set_text(_(f"{selected_files_str}"))
 
     def on_add_watermark_clicked(self, widget):
@@ -1061,27 +1165,37 @@ class WatermarkApp(Gtk.Window):
             elif self.selected_files_path:
                 self.default_output_dir = os.path.dirname(self.selected_files_path[0])
             else:
-                 self.default_output_dir = get_xdg_pictures_dir()
+                self.default_output_dir = get_xdg_pictures_dir()
 
             if is_running_under_flatpak():
                 # flatpak cause issue to save files, so forcing it to dir xdg pictures
                 self.default_output_dir = get_xdg_pictures_dir()
             if not is_running_under_flatpak():
-                self.output_filechooser_button.set_current_folder(self.default_output_dir)
+                self.output_filechooser_button.set_current_folder(
+                    self.default_output_dir
+                )
         else:
             self.default_output_dir = self.output_folder_path
             if not is_running_under_flatpak():
-                self.output_filechooser_button.set_current_folder(self.output_folder_path)
+                self.output_filechooser_button.set_current_folder(
+                    self.output_folder_path
+                )
 
-        p_dialog = ProgressDialog(self, _("Adding Watermark"), len(self.selected_files_path))
+        p_dialog = ProgressDialog(
+            self, _("Adding Watermark"), len(self.selected_files_path)
+        )
 
         try:
             for ind, image_path in enumerate(self.selected_files_path):
                 p_dialog.set_status(_(f"Processing: {os.path.basename(image_path)}"))
                 if self.check_if_pdf(image_path):
-                    output_file = self.add_watermark_to_pdf(image_path, self.default_output_dir, watermark_text, p_dialog)
+                    output_file = self.add_watermark_to_pdf(
+                        image_path, self.default_output_dir, watermark_text, p_dialog
+                    )
                 else:
-                    output_file = self.add_watermark_to_image(image_path, self.default_output_dir, watermark_text, p_dialog)
+                    output_file = self.add_watermark_to_image(
+                        image_path, self.default_output_dir, watermark_text, p_dialog
+                    )
 
                 if output_file:
                     print("Success", f"Generated File: {os.path.basename(output_file)}")
@@ -1091,7 +1205,7 @@ class WatermarkApp(Gtk.Window):
             p_dialog.close()
             # If list contains PDFs show list of files
             # Check if any result is PDF
-            has_pdf = any(f.lower().endswith('.pdf') for f in self.all_images)
+            has_pdf = any(f.lower().endswith(".pdf") for f in self.all_images)
 
             if has_pdf:
                 # If we have PDFs, we can't display them in the image viewer (simple viewer)
@@ -1123,8 +1237,8 @@ class WatermarkApp(Gtk.Window):
     def generate_preview(self):
         if not self.selected_files_path:
             warning_dialog = WarningDialog(
-               title="Warning",
-               message=_("Please select an image first"),
+                title="Warning",
+                message=_("Please select an image first"),
             )
             warning_dialog.show()
             return
@@ -1134,8 +1248,8 @@ class WatermarkApp(Gtk.Window):
             # PDF preview not supported
             if not self.preview_window:
                 warning_dialog = WarningDialog(
-                   title="Warning",
-                   message=_("Preview not supported for PDF files"),
+                    title="Warning",
+                    message=_("Preview not supported for PDF files"),
                 )
                 warning_dialog.show()
             return
@@ -1155,31 +1269,38 @@ class WatermarkApp(Gtk.Window):
 
                 # Prepare text
                 watermark_text = self.watermark_entry.get_text()
-                if not watermark_text: watermark_text = "Preview"
+                if not watermark_text:
+                    watermark_text = "Preview"
 
                 # Create layer with scale
-                layer = self.create_watermark_layer(img.width, img.height, watermark_text, scale_factor=scale)
+                layer = self.create_watermark_layer(
+                    img.width, img.height, watermark_text, scale_factor=scale
+                )
                 img.alpha_composite(layer)
 
                 # Save to temp
-                temp_dir = os.path.join(tempfile.gettempdir(), 'watermark_app')
+                temp_dir = os.path.join(tempfile.gettempdir(), "watermark_app")
                 os.makedirs(temp_dir, exist_ok=True)
-                self.preview_temp_path = os.path.join(temp_dir, 'preview.jpg')
+                self.preview_temp_path = os.path.join(temp_dir, "preview.jpg")
                 img.convert("RGB").save(self.preview_temp_path, "JPEG")
 
                 # Create window if needed
                 if not self.preview_window:
-                     self.preview_window = ImageViewerWindow()
-                     self.preview_window.connect("destroy", self.on_preview_destroyed)
-                     self.preview_window.set_title(_("Preview") + " - " + os.path.basename(file_path))
-                     self.preview_window.show_all()
+                    self.preview_window = ImageViewerWindow()
+                    self.preview_window.connect("destroy", self.on_preview_destroyed)
+                    self.preview_window.set_title(
+                        _("Preview") + " - " + os.path.basename(file_path)
+                    )
+                    self.preview_window.show_all()
 
                 # Update window
                 if self.preview_window:
-                     # Update title in case file changed
-                     self.preview_window.set_title(_("Preview") + " - " + os.path.basename(file_path))
-                     self.preview_window.load_images([self.preview_temp_path])
-                     self.preview_window.present()
+                    # Update title in case file changed
+                    self.preview_window.set_title(
+                        _("Preview") + " - " + os.path.basename(file_path)
+                    )
+                    self.preview_window.load_images([self.preview_temp_path])
+                    self.preview_window.present()
 
         except Exception as e:
             print(f"Preview error: {e}")
@@ -1189,9 +1310,11 @@ class WatermarkApp(Gtk.Window):
         cest_time = time.localtime(now + 3600)
         return cest_time
 
-    def create_watermark_layer(self, width, height, text, progress_dialog=None, scale_factor=1.0):
-        """ Creates a transparent image with the watermark pattern. """
-        layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    def create_watermark_layer(
+        self, width, height, text, progress_dialog=None, scale_factor=1.0
+    ):
+        """Creates a transparent image with the watermark pattern."""
+        layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         cest_time = self.get_current_time_ces()
         try:
             scaled_font_size = int(self.font_size * scale_factor)
@@ -1199,9 +1322,9 @@ class WatermarkApp(Gtk.Window):
                 scaled_font_size = 1
             font = ImageFont.truetype(self.font_base_name, scaled_font_size)
         except IOError:
-             font = ImageFont.load_default()
+            font = ImageFont.load_default()
 
-        timestamp_str_text = time.strftime('%d %B %Y_%Hh%M', cest_time)
+        timestamp_str_text = time.strftime("%d %B %Y_%Hh%M", cest_time)
         if self.date_filename_check.get_active():
             full_watermark_text = f"{text} {timestamp_str_text}"
         else:
@@ -1226,40 +1349,54 @@ class WatermarkApp(Gtk.Window):
 
             for xdata in x_positions:
                 if (xdata, ydata) not in used_positions:
-                    angle = random.uniform(- int(self.rotation_scale.get_value()),
-                                           int(self.rotation_scale.get_value()))
+                    angle = random.uniform(
+                        -int(self.rotation_scale.get_value()),
+                        int(self.rotation_scale.get_value()),
+                    )
                     self.font_transp = 100 - self.font_transparency
                     if self.font_color_choosen is False:
                         color = (
                             random.randint(0, 255),
                             random.randint(0, 255),
                             random.randint(0, 255),
-                            self.font_transp
+                            self.font_transp,
                         )
                     else:
                         color = (
                             int(self.font_color.red * 255),
                             int(self.font_color.green * 255),
                             int(self.font_color.blue * 255),
-                            self.font_transp
-                            )
+                            self.font_transp,
+                        )
 
-                    temp_image = Image.new('RGBA', (int(text_width * 3), int(text_height * 3)), (0, 0, 0, 0))
+                    temp_image = Image.new(
+                        "RGBA",
+                        (int(text_width * 3), int(text_height * 3)),
+                        (0, 0, 0, 0),
+                    )
                     temp_draw = ImageDraw.Draw(temp_image)
-                    temp_draw.text((text_width, text_height),
-                                   full_watermark_text, font=font, fill=color)
+                    temp_draw.text(
+                        (text_width, text_height),
+                        full_watermark_text,
+                        font=font,
+                        fill=color,
+                    )
                     rotated_text = temp_image.rotate(angle, expand=True)
                     rotated_text_position = (
                         xdata + text_width / 2 - rotated_text.width / 2,
-                        ydata + text_height / 2 - rotated_text.height / 2
+                        ydata + text_height / 2 - rotated_text.height / 2,
                     )
-                    layer.paste(rotated_text, (int(rotated_text_position[0]),
-                                             int(rotated_text_position[1])),
-                              mask=rotated_text)
+                    layer.paste(
+                        rotated_text,
+                        (int(rotated_text_position[0]), int(rotated_text_position[1])),
+                        mask=rotated_text,
+                    )
                     used_positions.add((xdata, ydata))
         return layer
 
-    def add_watermark_to_pdf(self, pdf_path, decided_output_path, text, progress_dialog=None):
+    def add_watermark_to_pdf(
+        self, pdf_path, decided_output_path, text, progress_dialog=None
+    ):
         try:
             reader = PyPDF2.PdfReader(pdf_path)
             writer = PyPDF2.PdfWriter()
@@ -1268,14 +1405,16 @@ class WatermarkApp(Gtk.Window):
             name_without_ext = os.path.splitext(original_filename)[0]
 
             cest_time = self.get_current_time_ces()
-            timestamp_str = time.strftime('%Y%m%d_%H%M%S', cest_time)
+            timestamp_str = time.strftime("%Y%m%d_%H%M%S", cest_time)
 
             fprefix = ""
             if self.watermark_prefix.get_text() != "":
                 fprefix = self.watermark_prefix.get_text() + "_"
 
             if self.date_filename_check.get_active():
-                final_filename = f"{fprefix}{text}_{timestamp_str}_{name_without_ext}.pdf"
+                final_filename = (
+                    f"{fprefix}{text}_{timestamp_str}_{name_without_ext}.pdf"
+                )
             else:
                 final_filename = f"{fprefix}{text}_{name_without_ext}.pdf"
 
@@ -1286,7 +1425,7 @@ class WatermarkApp(Gtk.Window):
 
             for i, page in enumerate(reader.pages):
                 if progress_dialog:
-                    progress_dialog.set_status(_(f"Processing page {i+1}..."))
+                    progress_dialog.set_status(_(f"Processing page {i + 1}..."))
                     progress_dialog.pulse()
 
                 # Get page size in points (1 point = 1/72 inch)
@@ -1296,7 +1435,9 @@ class WatermarkApp(Gtk.Window):
 
                 # Generate watermark layer
                 # We treat points as pixels for drawing
-                layer_img = self.create_watermark_layer(int(width), int(height), text, progress_dialog)
+                layer_img = self.create_watermark_layer(
+                    int(width), int(height), text, progress_dialog
+                )
 
                 # Save layer as PDF
                 temp_layer_path = os.path.join(temp_pdf_dir, f"watermark_{i}.pdf")
@@ -1319,13 +1460,15 @@ class WatermarkApp(Gtk.Window):
             print(f"Error adding watermark to PDF: {err}")
             return None
 
-    def add_watermark_to_image(self, image_path, decided_output_path, text, progress_dialog=None):
+    def add_watermark_to_image(
+        self, image_path, decided_output_path, text, progress_dialog=None
+    ):
         try:
             with Image.open(image_path).convert("RGBA") as img:
                 # Resize image if it's too large while preserving aspect ratio
                 if self.list_size.get_active_text() != "None":
                     resize_selected = int(self.list_size.get_active_text())
-                    width_percent = (resize_selected / float(img.width))
+                    width_percent = resize_selected / float(img.width)
                     height_size = int((float(img.height) * float(width_percent)))
 
                     if max(img.size) > resize_selected:
@@ -1333,33 +1476,43 @@ class WatermarkApp(Gtk.Window):
                     else:
                         warning_dialog = WarningDialog(
                             title="Error",
-                            message=_(f"Image size is  {img.size}, will not rescale it to {resize_selected}"),
-                            )
+                            message=_(
+                                f"Image size is  {img.size}, will not rescale it to {resize_selected}"
+                            ),
+                        )
                         warning_dialog.show()
 
-                layer = self.create_watermark_layer(img.width, img.height, text, progress_dialog)
+                layer = self.create_watermark_layer(
+                    img.width, img.height, text, progress_dialog
+                )
                 img.alpha_composite(layer)
 
                 cest_time = self.get_current_time_ces()
-                timestamp_str = time.strftime('%Y%m%d_%H%M%S', cest_time)
+                timestamp_str = time.strftime("%Y%m%d_%H%M%S", cest_time)
                 original_filename = os.path.basename(image_path)
                 name_without_ext = os.path.splitext(original_filename)[0]
                 fprefix = ""
                 if self.watermark_prefix.get_text() != "":
                     fprefix = self.watermark_prefix.get_text() + "_"
                 if self.date_filename_check.get_active():
-                    final_filename = f"{fprefix}{text}_{timestamp_str}_{name_without_ext}"
+                    final_filename = (
+                        f"{fprefix}{text}_{timestamp_str}_{name_without_ext}"
+                    )
                 else:
                     final_filename = f"{fprefix}{text}_{name_without_ext}"
 
                 full_output_filename = os.path.join(decided_output_path, final_filename)
                 if self.pdf_choosen is False:
-                    img.convert("RGB").save(full_output_filename+".jpg", "JPEG", quality=self.compression_rate)
+                    img.convert("RGB").save(
+                        full_output_filename + ".jpg",
+                        "JPEG",
+                        quality=self.compression_rate,
+                    )
                     extension = ".jpg"
                 else:
-                    img.convert("RGB").save(full_output_filename+".pdf", "PDF")
+                    img.convert("RGB").save(full_output_filename + ".pdf", "PDF")
                     extension = ".pdf"
-                return full_output_filename+extension
+                return full_output_filename + extension
 
         except Exception as err:
             print(f"Error adding watermark: {err}")
@@ -1369,6 +1522,7 @@ class WatermarkApp(Gtk.Window):
             )
             warning_dialog.show()
             return None
+
 
 WIN = WatermarkApp()
 WIN.connect("destroy", Gtk.main_quit)
