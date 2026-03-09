@@ -4,6 +4,25 @@
     "build-commands": [],
     "modules": [
         {
+            "name": "poppler",
+            "buildsystem": "cmake-ninja",
+            "config-opts": [
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DENABLE_UTILS=ON",
+                "-DENABLE_CPP=ON",
+                "-DENABLE_GLIB=ON",
+                "-DENABLE_QT5=OFF",
+                "-DENABLE_QT6=OFF"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://poppler.freedesktop.org/poppler-24.02.0.tar.xz",
+                    "sha256": "19187a3fdd05f33e7d604c4799c183de5ca0118640c88b370ddcf3136343222e"
+                }
+            ]
+        },
+        {
             "name": "python3-pillow",
             "buildsystem": "simple",
             "build-commands": [
@@ -18,16 +37,30 @@
             ]
         },
         {
-            "name": "python3-pypdf2",
+            "name": "python3-pdf2image",
             "buildsystem": "simple",
             "build-commands": [
-                "pip3 install --verbose --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} \"PyPDF2\" --no-build-isolation"
+                "pip3 install --verbose --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} \"pdf2image\" --no-build-isolation"
             ],
             "sources": [
                 {
                     "type": "file",
-                    "url": "https://files.pythonhosted.org/packages/8e/5e/c86a5643653825d3c913719e788e41386bee415c2b87b4f955432f2de6b2/pypdf2-3.0.1-py3-none-any.whl",
-                    "sha256": "d16e4205cfee272fbdc0568b68d82be796540b1537508cef59388f839c191928"
+                    "url": "https://files.pythonhosted.org/packages/e6/26/ed8c5c3cdc82b6e9afb6abc6720b8f8eb60c8c4ebb92bdb96ea96a332b9a/pdf2image-1.17.0-py3-none-any.whl",
+                    "sha256": "ecdd58d7afb810dffe21ef2b1bbc057ef434dabbac6c1b1e693ad2197d36b7bc"
+                }
+            ]
+        },
+        {
+            "name": "python3-reportlab",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --verbose --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} \"reportlab\" --no-build-isolation"
+            ],
+            "sources": [
+                {
+                    "type": "file",
+                    "url": "https://files.pythonhosted.org/packages/5f/2d/26427a1675dcf3670e5c7ba780389a722fb86664c21164f20a47bb912b70/reportlab-4.2.5.tar.gz",
+                    "sha256": "c49f1c9f1a1a7dc1f6e4b99e0b7fbfa5a39af698199c88c1f2d39aec637bcbf6"
                 }
             ]
         }
