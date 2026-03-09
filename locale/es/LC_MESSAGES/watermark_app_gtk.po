@@ -264,11 +264,11 @@ msgstr "Por favor, selecciona una imagen"
 
 #: watermark_app_gtk.py:1451
 msgid "Converting PDF pages..."
-msgstr ""
+msgstr "Convirtiendo páginas PDF..."
 
 #: watermark_app_gtk.py:1514
 msgid "Creating output PDF..."
-msgstr ""
+msgstr "Creando PDF de salida..."
 
 #~ msgid "Success"
 #~ msgstr "Éxito"

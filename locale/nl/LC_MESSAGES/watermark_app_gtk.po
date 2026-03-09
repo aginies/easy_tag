@@ -262,11 +262,11 @@ msgstr "Kies een afbeelding"
 
 #: watermark_app_gtk.py:1451
 msgid "Converting PDF pages..."
-msgstr ""
+msgstr "Bezig met converteren van PDF-pagina's..."
 
 #: watermark_app_gtk.py:1514
 msgid "Creating output PDF..."
-msgstr ""
+msgstr "Bezig met maken van uitvoer-PDF..."
 
 #~ msgid "Success"
 #~ msgstr "Voltooid"

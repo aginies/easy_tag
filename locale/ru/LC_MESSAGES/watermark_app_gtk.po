@@ -162,7 +162,7 @@ msgstr ""
 
 #: watermark_app_gtk.py:658
 msgid "JPEG (%)"
-msgstr ""
+msgstr "JPEG (%)"
 
 #: watermark_app_gtk.py:672
 msgid ""
@@ -176,7 +176,7 @@ msgstr ""
 
 #: watermark_app_gtk.py:677
 msgid "PDF"
-msgstr ""
+msgstr "PDF"
 
 #: watermark_app_gtk.py:680
 #, fuzzy
@@ -263,11 +263,11 @@ msgstr "Выберите изображение"
 
 #: watermark_app_gtk.py:1451
 msgid "Converting PDF pages..."
-msgstr ""
+msgstr "Конвертация страниц PDF..."
 
 #: watermark_app_gtk.py:1514
 msgid "Creating output PDF..."
-msgstr ""
+msgstr "Создание выходного PDF..."
 
 #~ msgid "Success"
 #~ msgstr "Успешно"
