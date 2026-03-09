@@ -76,6 +76,18 @@ if os.path.exists(ICON_PNG):
 # GTK/GObject data files
 datas += collect_data_files('gi')
 
+# Collect pdf2image data files (if any)
+try:
+    datas += collect_data_files('pdf2image')
+except Exception:
+    pass
+
+# Collect reportlab data files
+try:
+    datas += collect_data_files('reportlab')
+except Exception:
+    pass
+
 # Poppler binaries (for pdf2image on Windows)
 if sys.platform == 'win32' and POPPLER_PATH and os.path.exists(POPPLER_PATH):
     import glob
@@ -145,6 +157,12 @@ hiddenimports = [
 
 # Collect all gi.repository submodules
 hiddenimports += collect_submodules('gi.repository')
+
+# Collect all pdf2image submodules to ensure nothing is missed
+hiddenimports += collect_submodules('pdf2image')
+
+# Collect all reportlab submodules
+hiddenimports += collect_submodules('reportlab')
 
 # ============================================================================
 # BINARIES
