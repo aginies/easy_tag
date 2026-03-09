@@ -8,10 +8,10 @@
  <metadata_license>CC0-1.0</metadata_license>
  <project_license>GPL-2.0+</project_license>
  <name>Watermark</name>
- <summary>Custom watermark on images</summary>
+ <summary>Custom watermark on images/PDF</summary>
  <description>
   <p>
-   Add customized watermarks to any images, helping to secure official documents and combat identity theft.
+   Add customized watermarks to any images or PDF, helping to secure official documents and combat identity theft.
   </p>
  </description>
  <developer id="com.guibo">
@@ -23,31 +23,31 @@
  <launchable type="desktop-id">io.github.aginies.watermark.desktop</launchable>
  <screenshots>
   <screenshot type="default">
-   <image type="source">https://raw.githubusercontent.com/aginies/watermark/refs/tags/4.8/images/main_expert.png</image>
+   <image type="source">https://raw.githubusercontent.com/aginies/watermark/refs/tags/5.0/images/main_expert.png</image>
    <caption>Main application</caption>
   </screenshot>
   <screenshot>
-   <image type="source">https://raw.githubusercontent.com/aginies/watermark/refs/tags/4.8/images/example.png</image>
+   <image type="source">https://raw.githubusercontent.com/aginies/watermark/refs/tags/5.0/images/example.png</image>
    <caption>Watermarked Image</caption>
   </screenshot>
   <screenshot>
-   <image type="source">https://raw.githubusercontent.com/aginies/watermark/refs/tags/4.8/images/font_chooser.png</image>
+   <image type="source">https://raw.githubusercontent.com/aginies/watermark/refs/tags/5.0/images/font_chooser.png</image>
    <caption>Font Chooser</caption>
   </screenshot>
   <screenshot>
-   <image type="source">https://raw.githubusercontent.com/aginies/watermark/refs/tags/4.8/images/color_chooser.png</image>
+   <image type="source">https://raw.githubusercontent.com/aginies/watermark/refs/tags/5.0/images/color_chooser.png</image>
    <caption>Color Chooser</caption>
   </screenshot>
  </screenshots>
  <releases>
-  <release version="4.8" date="2025-07-17">
+  <release version="5.0" date="2025-07-18">
    <description>
     <p>Main features</p>
     <ul>
-     <li>Add watermarks to multiple images</li>
+     <li>Add watermarks to multiple images or PDF files</li>
      <li>Can export to PDF or JPG files</li>
      <li>Expert mode: font selection, font color choice or random, font transparency,
-     text angle, watermark density, optional Date + Hour, filename prefix, PDF or JPG output,
+     text angle, watermark density, optional Date + Hour, filename prefix,
      JPG compression level, image resize</li>
      <li>Supported languages: FR, EN, ES, NL, RU</li>
      </ul>
