@@ -456,6 +456,9 @@ class WatermarkApp(Gtk.Window):
         self.output_filechooser_button.set_title(output_text)
         self.output_filechooser_button.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
         self.output_filechooser_button.set_current_folder(self.output_folder_path)
+        self.output_filechooser_button.connect(
+            "file-set", self.on_output_folder_selected
+        )
         button_size_group.add_widget(self.output_filechooser_button)
         output_hbox.pack_start(output_label, False, False, 12)
         output_hbox.pack_end(self.output_filechooser_button, False, False, 12)
@@ -1132,6 +1135,13 @@ class WatermarkApp(Gtk.Window):
                 os.path.basename(path) for path in self.selected_files_path
             )
             self.files_label.set_text(_(f"{selected_files_str}"))
+
+    def on_output_folder_selected(self, widget):
+        """Handle output folder selection"""
+        folder = widget.get_filename()
+        if folder:
+            self.output_folder_path = folder
+            print(f"Output folder selected: {folder}")
 
     def on_add_watermark_clicked(self, widget):
         if not self.selected_files_path:
