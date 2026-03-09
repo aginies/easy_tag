@@ -76,17 +76,34 @@ if os.path.exists(ICON_PNG):
 # GTK/GObject data files
 datas += collect_data_files('gi')
 
-# Collect pdf2image data files (if any)
+# Manually include pdf2image and reportlab packages from site-packages
 try:
-    datas += collect_data_files('pdf2image')
-except Exception as e:
-    print(f"Note: Could not collect pdf2image data files: {e}")
-
-# Collect reportlab data files
-try:
-    datas += collect_data_files('reportlab')
-except Exception as e:
-    print(f"Note: Could not collect reportlab data files: {e}")
+    import pdf2image
+    import reportlab
+    
+    pdf2image_path = os.path.dirname(pdf2image.__file__)
+    reportlab_path = os.path.dirname(reportlab.__file__)
+    
+    # Add entire pdf2image package
+    datas.append((pdf2image_path, 'pdf2image'))
+    print(f"INFO: Manually bundling pdf2image from: {pdf2image_path}")
+    
+    # Add entire reportlab package
+    datas.append((reportlab_path, 'reportlab'))
+    print(f"INFO: Manually bundling reportlab from: {reportlab_path}")
+    
+except ImportError as e:
+    print(f"WARNING: Could not locate packages for manual bundling: {e}")
+    # Fallback to automatic collection
+    try:
+        datas += collect_data_files('pdf2image')
+    except Exception as e2:
+        print(f"Note: Could not collect pdf2image data files: {e2}")
+    
+    try:
+        datas += collect_data_files('reportlab')
+    except Exception as e2:
+        print(f"Note: Could not collect reportlab data files: {e2}")
 
 # Poppler binaries (for pdf2image on Windows)
 if sys.platform == 'win32' and POPPLER_PATH and os.path.exists(POPPLER_PATH):
