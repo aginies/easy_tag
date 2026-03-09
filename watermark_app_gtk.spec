@@ -79,14 +79,14 @@ datas += collect_data_files('gi')
 # Collect pdf2image data files (if any)
 try:
     datas += collect_data_files('pdf2image')
-except Exception:
-    pass
+except Exception as e:
+    print(f"Note: Could not collect pdf2image data files: {e}")
 
 # Collect reportlab data files
 try:
     datas += collect_data_files('reportlab')
-except Exception:
-    pass
+except Exception as e:
+    print(f"Note: Could not collect reportlab data files: {e}")
 
 # Poppler binaries (for pdf2image on Windows)
 if sys.platform == 'win32' and POPPLER_PATH and os.path.exists(POPPLER_PATH):
@@ -158,11 +158,18 @@ hiddenimports = [
 # Collect all gi.repository submodules
 hiddenimports += collect_submodules('gi.repository')
 
-# Collect all pdf2image submodules to ensure nothing is missed
-hiddenimports += collect_submodules('pdf2image')
+# Try to collect pdf2image and reportlab submodules (may not be packages)
+try:
+    hiddenimports += collect_submodules('pdf2image')
+except Exception as e:
+    print(f"Note: Could not auto-collect pdf2image submodules: {e}")
+    print("Using explicit imports instead (already defined above)")
 
-# Collect all reportlab submodules
-hiddenimports += collect_submodules('reportlab')
+try:
+    hiddenimports += collect_submodules('reportlab')
+except Exception as e:
+    print(f"Note: Could not auto-collect reportlab submodules: {e}")
+    print("Using explicit imports instead (already defined above)")
 
 # ============================================================================
 # BINARIES
