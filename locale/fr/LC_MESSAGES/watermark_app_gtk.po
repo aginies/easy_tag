@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 4.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-23 13:26+0100\n"
+"POT-Creation-Date: 2026-03-09 13:26+0100\n"
 "PO-Revision-Date: 2025-06-30 14:14+0200\n"
 "Last-Translator: Antoine Ginies <antoine@ginies.org>\n"
 "Language-Team: none\n"
@@ -15,144 +15,139 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: watermark_app_gtk.py:79
+#: watermark_app_gtk.py:89
 msgid "Processing..."
 msgstr "Traitement en cours..."
 
-#: watermark_app_gtk.py:167
+#: watermark_app_gtk.py:179
 msgid "Previous"
 msgstr "Précédent"
 
-#: watermark_app_gtk.py:176
+#: watermark_app_gtk.py:188
 msgid "Next"
 msgstr "Suivant"
 
-#: watermark_app_gtk.py:323
+#: watermark_app_gtk.py:361
 msgid "Watermark App"
 msgstr "Application Filigrane"
 
-#: watermark_app_gtk.py:359
+#: watermark_app_gtk.py:398
 msgid "Preferences"
 msgstr "Préférences"
 
-#: watermark_app_gtk.py:364
+#: watermark_app_gtk.py:403
 msgid "Show Expert Options"
 msgstr "Afficher les options expertes"
 
-#: watermark_app_gtk.py:376
+#: watermark_app_gtk.py:415
 msgid "Help"
 msgstr "Aide"
 
-#: watermark_app_gtk.py:382
+#: watermark_app_gtk.py:421
 msgid "Online Help"
 msgstr "Aide en ligne"
 
-#: watermark_app_gtk.py:387
+#: watermark_app_gtk.py:426
 msgid "About App"
 msgstr "À propos de l'application"
 
-#: watermark_app_gtk.py:393
+#: watermark_app_gtk.py:432
 msgid "About Watermark App"
 msgstr "À propos de l'application Filigrane"
 
-#: watermark_app_gtk.py:401
-#, fuzzy
+#: watermark_app_gtk.py:440
 msgid "Select Image or PDF File(s)"
-msgstr "Sélectionner le(s) fichier(s) image"
+msgstr "Sélectionner le(s) fichier(s) image ou PDF"
 
-#: watermark_app_gtk.py:403
+#: watermark_app_gtk.py:442
 msgid "Choose Files"
 msgstr "Choisir les fichiers"
 
-#: watermark_app_gtk.py:417
+#: watermark_app_gtk.py:456
 msgid "Watermark Text"
 msgstr "Texte du filigrane"
 
-#: watermark_app_gtk.py:428
+#: watermark_app_gtk.py:467
 msgid "TTF Font chooser"
 msgstr "Sélecteur de police TTF"
 
-#: watermark_app_gtk.py:430
+#: watermark_app_gtk.py:469
 msgid "No font selected"
 msgstr "Aucune police sélectionnée"
 
-#: watermark_app_gtk.py:439
+#: watermark_app_gtk.py:478
 msgid "Select Output Folder"
 msgstr "Sélectionner le dossier de sortie"
 
-#: watermark_app_gtk.py:456
+#: watermark_app_gtk.py:498
 msgid "Expert Options"
 msgstr "Options expertes"
 
-#: watermark_app_gtk.py:467
+#: watermark_app_gtk.py:511
 msgid "Angle (degrees)"
 msgstr "Angle (degrés)"
 
-#: watermark_app_gtk.py:473
+#: watermark_app_gtk.py:524
 msgid "Watermark Angle in the image (positive and negative)"
 msgstr "Angle du filigrane dans l'image (positif et négatif)"
 
-#: watermark_app_gtk.py:482
-#, fuzzy
+#: watermark_app_gtk.py:534
 msgid "Transparency (%)"
 msgstr "Transparence (%)"
 
-#: watermark_app_gtk.py:489
-#, fuzzy
+#: watermark_app_gtk.py:549
 msgid ""
 "Watermark transparency in the image\n"
 "<b>* 0:</b> No transparency\n"
 "<b>* 100:</b> Invisible"
 msgstr ""
 "Transparence du Filigrane dans l'image\n"
-"<b>* 0 :</b> Aucune transparence\n"
-"<b>* 100 :</b> Invisible"
+"<b>* 0:</b> Aucune transparence\n"
+"<b>* 100:</b> Invisible"
 
-#: watermark_app_gtk.py:498
-#, fuzzy
+#: watermark_app_gtk.py:560
 msgid "Density (%)"
 msgstr "Densité (%)"
 
-#: watermark_app_gtk.py:504
-#, fuzzy
+#: watermark_app_gtk.py:574
 msgid ""
 "How many watermark you want\n"
 "<b>* 0:</b> None\n"
 "<b>* 100:</b> Fill the image"
 msgstr ""
-"<b>* 0 :</b> Aucun\n"
-"<b>* 100 :</b> Remplir l'image"
+"Combien de filigranes souhaitez-vous\n"
+"<b>* 0:</b> Aucun\n"
+"<b>* 100:</b> Remplir l'image"
 
-#: watermark_app_gtk.py:517
+#: watermark_app_gtk.py:591
 msgid "Random Colors"
 msgstr "Couleurs aléatoires"
 
-#: watermark_app_gtk.py:527
+#: watermark_app_gtk.py:601
 msgid "Filename Prefix"
 msgstr "Préfixe du nom de fichier"
 
-#: watermark_app_gtk.py:530
+#: watermark_app_gtk.py:605
 msgid "You can add an <b>Extra Prefix</b> to the final filename"
 msgstr ""
 "Vous pouvez ajouter un <b>préfixe supplémentaire</b> au nom de fichier final"
 
-#: watermark_app_gtk.py:539
+#: watermark_app_gtk.py:615
 msgid "Include Date + Hour"
 msgstr "Inclure la date et l'heure"
 
-#: watermark_app_gtk.py:542
+#: watermark_app_gtk.py:620
 msgid ""
 "Add the Date and the Hour in the watermark, include that into the filename"
 msgstr ""
 "Ajouter la date et l'heure dans le filigrane, inclure cela dans le nom de "
 "fichier"
 
-#: watermark_app_gtk.py:550
+#: watermark_app_gtk.py:630
 msgid "Resize to"
 msgstr "Redimensionner à"
 
-#: watermark_app_gtk.py:552
-#, fuzzy
+#: watermark_app_gtk.py:634
 msgid ""
 "You can <b>resize</b> the original image to another size.\n"
 "This option is not available if you choose PDF output format."
@@ -160,104 +155,116 @@ msgstr ""
 "Vous pouvez <b>redimensionner</b> l'image originale à une autre taille.\n"
 "Cette option n'est pas disponible si vous choisissez le format de sortie PDF."
 
-#: watermark_app_gtk.py:565
+#: watermark_app_gtk.py:658
 msgid "JPEG (%)"
 msgstr "JPEG (%)"
 
-#: watermark_app_gtk.py:572
-#, fuzzy
+#: watermark_app_gtk.py:672
 msgid ""
 "Compression ratio of the generated JPEG Image(s)\n"
 "<b>* 0:</b> None\n"
 "<b>* 100:</b> Full compression"
 msgstr ""
-"<b>* 0 :</b> Aucun\n"
-"<b>* 100 :</b> Compression complète"
+"Taux de compression de l'image JPEG générée\n"
+"<b>* 0:</b> Aucune\n"
+"<b>* 100:</b> Compression complète"
 
-#: watermark_app_gtk.py:575
+#: watermark_app_gtk.py:677
 msgid "PDF"
 msgstr "PDF"
 
-#: watermark_app_gtk.py:576
-#, fuzzy
+#: watermark_app_gtk.py:680
 msgid ""
 "Save the image into a <b>PDF</b> format instead of JPEG.\n"
 "There is <b>No view</b> of the watermarked file <b>in PDF</b> format."
 msgstr ""
 "Enregistrer l'image au format <b>PDF</b> au lieu de JPEG.\n"
-"Il n'y a <b>pas d'aperçu<b> du fichier filigrané au <b>format PDF<b>."
+"Il n'y a <b>pas d'aperçu</b> du fichier filigrané au <b>format PDF</b>."
 
-#: watermark_app_gtk.py:591
+#: watermark_app_gtk.py:697
 msgid "Add Watermark"
 msgstr "Ajouter un filigrane"
 
-#: watermark_app_gtk.py:674
+#: watermark_app_gtk.py:701 watermark_app_gtk.py:1327 watermark_app_gtk.py:1335
+msgid "Preview"
+msgstr "Aperçu"
+
+#: watermark_app_gtk.py:792
 msgid "Could not find the default font file, choose another one."
 msgstr ""
 "Impossible de trouver le fichier de police par défaut, choisissez-en un "
 "autre."
 
-#: watermark_app_gtk.py:736
+#: watermark_app_gtk.py:858
 msgid "Choose a TTF Font"
 msgstr "Choisir une police TTF"
 
-#: watermark_app_gtk.py:776
+#: watermark_app_gtk.py:900
 msgid "An error occurred, can't find the font path, please choose another one"
 msgstr ""
 "Une erreur est survenue, impossible de trouver le chemin de la police, "
 "veuillez en choisir une autre"
 
-#: watermark_app_gtk.py:914
-#, fuzzy
+#: watermark_app_gtk.py:1043
 msgid "Watermark App Version 5.0"
-msgstr "Application Filigrane Version 4.1"
+msgstr "Application Filigrane Version 5.0"
 
-#: watermark_app_gtk.py:922
-#, fuzzy
+#: watermark_app_gtk.py:1051
 msgid ""
 "This app add a Watermark to images or PDF\n"
 "Open Source Project\n"
 "Licence GPL2"
 msgstr ""
-"Cette application ajoute un filigrane aux images\n"
+"Cette application ajoute un filigrane aux images ou PDF\n"
 "Projet Open Source\n"
 "Licence GPL2"
 
-#: watermark_app_gtk.py:934 watermark_app_gtk.py:950
+#: watermark_app_gtk.py:1065 watermark_app_gtk.py:1083
 msgid "Close"
 msgstr "Fermer"
 
-#: watermark_app_gtk.py:941
+#: watermark_app_gtk.py:1072
 msgid "help"
 msgstr "aide"
 
-#: watermark_app_gtk.py:961
+#: watermark_app_gtk.py:1094
 msgid "Image Files"
 msgstr "Fichiers image"
 
-#: watermark_app_gtk.py:982
+#: watermark_app_gtk.py:1115
 msgid "Please choose files"
 msgstr "Veuillez choisir des fichiers"
 
-#: watermark_app_gtk.py:1029
+#: watermark_app_gtk.py:1175
 msgid "Please select an image"
 msgstr "Veuillez sélectionner une image"
 
-#: watermark_app_gtk.py:1038
+#: watermark_app_gtk.py:1184
 msgid "Please enter a watermark text"
 msgstr "Veuillez entrer un texte de filigrane"
 
-#: watermark_app_gtk.py:1046
+#: watermark_app_gtk.py:1192
 msgid "Please Select a Font"
 msgstr "Veuillez sélectionner une police"
 
-#: watermark_app_gtk.py:1069
+#: watermark_app_gtk.py:1220
 msgid "Adding Watermark"
 msgstr "Ajout du filigrane"
 
-#: watermark_app_gtk.py:1092
-msgid "Success"
-msgstr "Succès"
+#: watermark_app_gtk.py:1263
+msgid "Please select an image first"
+msgstr "Veuillez sélectionner une image d'abord"
+
+#: watermark_app_gtk.py:1451
+msgid "Converting PDF pages..."
+msgstr "Conversion des pages PDF..."
+
+#: watermark_app_gtk.py:1514
+msgid "Creating output PDF..."
+msgstr "Création du PDF de sortie..."
+
+#~ msgid "Success"
+#~ msgstr "Succès"
 
 #, fuzzy, python-brace-format
 #~ msgid ""
