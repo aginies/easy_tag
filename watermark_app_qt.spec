@@ -4,12 +4,21 @@ PyInstaller spec file for Watermark App (Qt/PyQt6 version)
 Author: antoine@ginies.org
 
 Usage:
+    # Standard build (release mode, no console)
+    pyinstaller watermark_app_qt.spec
+    
+    # Debug build (with console for error messages)
+    # Edit DEBUG_MODE = True below, then run:
     pyinstaller watermark_app_qt.spec
 
 Build modes:
     - Edit ONEFILE variable below to switch between onefile and folder mode
     - Onefile: Single executable (slower startup, easier distribution)
     - Folder: Multiple files (faster startup, larger distribution)
+    
+    - Edit DEBUG_MODE to enable/disable console and debug output
+    - Debug: Console window enabled, shows errors and warnings
+    - Release: No console, GUI-only application
 """
 
 import sys
@@ -26,6 +35,9 @@ ONEFILE = True
 # Enable UPX compression (set to False if antivirus issues occur)
 USE_UPX = True
 
+# Debug mode: Set to True to enable console output and debug logging
+DEBUG_MODE = False
+
 # Application metadata
 APP_NAME = 'WatermarkApp_Qt'
 APP_VERSION = '5.0.0.0'
@@ -39,6 +51,11 @@ MAIN_SCRIPT = os.path.join(SCRIPT_DIR, 'watermark_app_qt.py')
 LOCALE_DIR = os.path.join(SCRIPT_DIR, 'locale')
 ICON_ICO = os.path.join(SCRIPT_DIR, 'io.github.aginies.watermark.ico')
 ICON_PNG = os.path.join(SCRIPT_DIR, 'io.github.aginies.watermark.png')
+
+# Poppler path (for PDF support on Windows)
+# Set this to your poppler installation path if you have it installed
+# Example: POPPLER_PATH = r'C:\poppler-24.02.0\Library\bin'
+POPPLER_PATH = os.environ.get('POPPLER_PATH', None)
 
 # ============================================================================
 # DATA FILES
@@ -62,6 +79,19 @@ try:
 except Exception:
     pass  # PyQt6 may not be installed on build system
 
+# Poppler binaries (for pdf2image on Windows)
+if sys.platform == 'win32' and POPPLER_PATH and os.path.exists(POPPLER_PATH):
+    import glob
+    poppler_bins = glob.glob(os.path.join(POPPLER_PATH, '*.exe'))
+    poppler_dlls = glob.glob(os.path.join(POPPLER_PATH, '*.dll'))
+    for bin_file in poppler_bins + poppler_dlls:
+        datas.append((bin_file, 'poppler/bin'))
+    print(f"INFO: Found {len(poppler_bins)} poppler executables and {len(poppler_dlls)} DLLs")
+elif sys.platform == 'win32':
+    print("WARNING: POPPLER_PATH not set. PDF functionality may not work!")
+    print("Set environment variable: set POPPLER_PATH=C:\\path\\to\\poppler\\bin")
+    print("Or edit POPPLER_PATH in the spec file")
+
 # ============================================================================
 # HIDDEN IMPORTS
 # ============================================================================
@@ -81,16 +111,20 @@ hiddenimports = [
     'PIL.ImageFont',
     'PIL._imaging',
     
-    # PDF handling
+    # PDF handling - pdf2image and all its dependencies
     'pdf2image',
     'pdf2image.exceptions',
+    'pdf2image.pdf2image',
+    'pdf2image.parsers',
     'reportlab',
     'reportlab.pdfgen',
     'reportlab.pdfgen.canvas',
     'reportlab.lib',
     'reportlab.lib.utils',
     'reportlab.lib.colors',
+    'reportlab.lib.pagesizes',
     'reportlab.platypus',
+    'reportlab.rl_config',
     
     # Standard library modules
     'tempfile',
@@ -140,7 +174,6 @@ excludes = [
     'gi',  # GTK not needed for Qt version
     'gi.repository',
     '_pytest',
-    'distutils',
 ]
 
 # ============================================================================
@@ -155,9 +188,9 @@ a = Analysis(
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
-    hookspath=[],
+    hookspath=[SCRIPT_DIR],  # Look for hooks in script directory
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=[os.path.join(SCRIPT_DIR, 'hook-pdf2image.py')] if os.path.exists(os.path.join(SCRIPT_DIR, 'hook-pdf2image.py')) else [],
     excludes=excludes,
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
@@ -181,13 +214,13 @@ pyz = PYZ(
 
 exe_kwargs = {
     'name': APP_NAME,
-    'debug': False,
+    'debug': DEBUG_MODE,
     'bootloader_ignore_signals': False,
     'strip': False,
     'upx': USE_UPX,
     'upx_exclude': [],
     'runtime_tmpdir': None,
-    'console': False,  # Set to True for debugging
+    'console': DEBUG_MODE,  # Enable console in debug mode
     'disable_windowed_traceback': False,
     'target_arch': None,
     'codesign_identity': None,
