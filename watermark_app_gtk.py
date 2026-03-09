@@ -1408,7 +1408,30 @@ class WatermarkApp(Gtk.Window):
         self, pdf_path, decided_output_path, text, progress_dialog=None
     ):
         try:
-            reader = PyPDF2.PdfReader(pdf_path)
+            # Validate file exists and is readable
+            if not os.path.exists(pdf_path):
+                raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+
+            if not os.access(pdf_path, os.R_OK):
+                raise PermissionError(f"Cannot read PDF file: {pdf_path}")
+
+            # Check file size
+            file_size = os.path.getsize(pdf_path)
+            if file_size == 0:
+                raise ValueError(f"PDF file is empty: {pdf_path}")
+
+            # Try to open with strict=False to handle malformed PDFs
+            try:
+                reader = PyPDF2.PdfReader(pdf_path, strict=False)
+            except Exception as read_err:
+                raise ValueError(
+                    f"Cannot parse PDF file (possibly corrupted or invalid format): {read_err}"
+                )
+
+            # Validate the PDF has pages
+            if len(reader.pages) == 0:
+                raise ValueError("PDF has no pages")
+
             writer = PyPDF2.PdfWriter()
 
             original_filename = os.path.basename(pdf_path)
@@ -1454,11 +1477,16 @@ class WatermarkApp(Gtk.Window):
                 layer_img.save(temp_layer_path, "PDF")
 
                 # Merge
-                watermark_reader = PyPDF2.PdfReader(temp_layer_path)
-                watermark_page = watermark_reader.pages[0]
+                try:
+                    watermark_reader = PyPDF2.PdfReader(temp_layer_path, strict=False)
+                    watermark_page = watermark_reader.pages[0]
 
-                page.merge_page(watermark_page)
-                writer.add_page(page)
+                    page.merge_page(watermark_page)
+                    writer.add_page(page)
+                except Exception as merge_err:
+                    print(f"Error merging watermark on page {i + 1}: {merge_err}")
+                    # Add the page without watermark to avoid losing content
+                    writer.add_page(page)
 
             with open(output_path, "wb") as f:
                 writer.write(f)
@@ -1466,8 +1494,41 @@ class WatermarkApp(Gtk.Window):
             shutil.rmtree(temp_pdf_dir)
             return output_path
 
+        except FileNotFoundError as err:
+            error_msg = f"File not found: {err}"
+            print(f"Error adding watermark to PDF: {error_msg}")
+            warning_dialog = WarningDialog(
+                title="Error",
+                message=_(error_msg),
+            )
+            warning_dialog.show()
+            return None
+        except PermissionError as err:
+            error_msg = f"Permission denied: {err}"
+            print(f"Error adding watermark to PDF: {error_msg}")
+            warning_dialog = WarningDialog(
+                title="Error",
+                message=_(error_msg),
+            )
+            warning_dialog.show()
+            return None
+        except ValueError as err:
+            error_msg = str(err)
+            print(f"Error adding watermark to PDF: {error_msg}")
+            warning_dialog = WarningDialog(
+                title="Error",
+                message=_(f"PDF Error: {error_msg}"),
+            )
+            warning_dialog.show()
+            return None
         except Exception as err:
-            print(f"Error adding watermark to PDF: {err}")
+            error_msg = f"Unexpected error: {err}"
+            print(f"Error adding watermark to PDF: {error_msg}")
+            warning_dialog = WarningDialog(
+                title="Error",
+                message=_(f"An error occurred while processing PDF: {err}"),
+            )
+            warning_dialog.show()
             return None
 
     def add_watermark_to_image(
