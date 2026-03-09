@@ -20,7 +20,6 @@ Cette application est utilisée pour lutter contre l'usurpation d'identité en s
 Currently this is a single python script, There is a need to get this modular now, (this was ok for the first basic version but this is not more the case...). 
 This tool can only used **Truetype font**, bitmap one can not be selected or used.
 If your system can not display the font in the **GtkChooserDialog preview** (ie: it shows squares), the tool will not be able to use that font to watermark your image.
-This tool do not show any view if you export to PDF file.
 This is only available for Linux and Windows now, a MacOS version should be possible.
 
 # Contribute
@@ -35,7 +34,8 @@ This app is in Python GTK3.
 
 * pillow
 * gobject
-* PyPDF2
+* poppler
+* pdf2image
 
 # watermark_app_gtk.py
 
@@ -43,6 +43,7 @@ Python GTK3 version.
 * Add watermark to multiple images or PDF
 * List of selected images
 * Multiple Image viewer
+* Preview of PDF or Images
 * Default save directory is that of the first image
 * Languages: EN, FR, ES, NL, RU
 * Expert mode: 
@@ -60,7 +61,8 @@ Python GTK3 version.
 Script en Python GTK3.
 * Ajout filigrane sur de multiple images ou PDF
 * Liste des images selectionnées
-* Visualiseur d'images
+* Preview des images ou PDF
+* Visualiseur de rendu final (PDF ou Images)
 * Répertoire de sauvegarde par défaut est celui de la première image
 * Langues: EN, FR, ES, NL, RU
 * Expert mode: 
@@ -83,6 +85,8 @@ python3 watermark_app_gtk.py
 ```
 
 ## Get the .exe (Windows)
+
+Latest buildable version for windows is 4.8.
 
 * Install Python on Windows https://www.python.org/downloads/?lang=fr
 * install MSYS2: http://www.msys2.org
@@ -128,7 +132,4 @@ For more information: https://docs.flathub.org/docs/for-app-authors/submission#b
 # TODO
 
 * have a modular app not a single script, to handle GUI part, conversion part, watermark part, etc...
-* add the technical info of the watermark configuration in the image viewer
 * save and restore configuration, or propose default template for light or dark image
-* show pdf files generated (using poppler)
-* perhaps many more stuff....
