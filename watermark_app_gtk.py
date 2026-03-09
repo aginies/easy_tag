@@ -11,7 +11,9 @@ import pathlib
 import uuid
 import shutil
 import tempfile
-import PyPDF2
+from pdf2image import convert_from_path
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 import gi
 
 if platform.system() == "Windows":
@@ -202,12 +204,35 @@ class ImageViewerWindow(Gtk.Window):
 
     def display_single_image(self, image_path):
         """Display a single image in the window"""
-        # Load the image using GdkPixbuf
-        try:
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file(image_path)
-        except GdkPixbuf.PixbufError as err:
-            print(f"Error loading image {image_path}: {err}")
-            return
+        # Check if it's a PDF file
+        if image_path.lower().endswith(".pdf"):
+            # Convert first page of PDF to image for display
+            try:
+                images = convert_from_path(
+                    image_path, dpi=150, first_page=1, last_page=1
+                )
+                if images:
+                    # Save to temporary file
+                    temp_dir = os.path.join(tempfile.gettempdir(), "watermark_app")
+                    os.makedirs(temp_dir, exist_ok=True)
+                    temp_image_path = os.path.join(
+                        temp_dir, f"pdf_view_{os.path.basename(image_path)}.jpg"
+                    )
+                    images[0].save(temp_image_path, "JPEG")
+                    # Load the temporary image
+                    pixbuf = GdkPixbuf.Pixbuf.new_from_file(temp_image_path)
+                else:
+                    raise ValueError("Could not render PDF page")
+            except Exception as pdf_err:
+                print(f"Error loading PDF {image_path}: {pdf_err}")
+                return
+        else:
+            # Load regular image using GdkPixbuf
+            try:
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file(image_path)
+            except GdkPixbuf.PixbufError as err:
+                print(f"Error loading image {image_path}: {err}")
+                return
 
         window_width, window_height = self.get_size()
         img_width = pixbuf.get_width()
@@ -1213,22 +1238,9 @@ class WatermarkApp(Gtk.Window):
                 p_dialog.update_progress(ind + 1)
 
             p_dialog.close()
-            # If list contains PDFs show list of files
-            # Check if any result is PDF
-            has_pdf = any(f.lower().endswith(".pdf") for f in self.all_images)
-
-            if has_pdf:
-                # If we have PDFs, we can't display them in the image viewer (simple viewer)
-                warning_dialog = WarningDialog(
-                    title=_("Success"),
-                    message=_(f"Generated file(s):\n{self.all_images}"),
-                )
-                warning_dialog.show()
-                self.all_images = []
-                return
-            else:
-                self.main_display_images(self.all_images)
-                self.all_images = []
+            # Display all results (images and PDFs)
+            self.main_display_images(self.all_images)
+            self.all_images = []
 
         except Exception as err:
             print(f"Error processing the image: {err}")
@@ -1254,63 +1266,76 @@ class WatermarkApp(Gtk.Window):
             return
 
         file_path = self.selected_files_path[0]
-        if self.check_if_pdf(file_path):
-            # PDF preview not supported
-            if not self.preview_window:
-                warning_dialog = WarningDialog(
-                    title="Warning",
-                    message=_("Preview not supported for PDF files"),
-                )
-                warning_dialog.show()
-            return
 
         try:
             # Use a fixed preview max dimension, e.g. 800
             PREVIEW_MAX = 800
-            with Image.open(file_path).convert("RGBA") as img:
-                width, height = img.size
-                scale = 1.0
-                if max(width, height) > PREVIEW_MAX:
-                    scale = PREVIEW_MAX / max(width, height)
-                    new_size = (int(width * scale), int(height * scale))
-                    img = img.resize(new_size, Image.LANCZOS)
-                else:
-                    new_size = (width, height)
+            scale = 1.0
 
-                # Prepare text
-                watermark_text = self.watermark_entry.get_text()
-                if not watermark_text:
-                    watermark_text = "Preview"
+            # Handle PDF files
+            if self.check_if_pdf(file_path):
+                # Convert first page of PDF to image for preview
+                try:
+                    images = convert_from_path(
+                        file_path, dpi=150, first_page=1, last_page=1
+                    )
+                    if images:
+                        img = images[0].convert("RGBA")
+                    else:
+                        raise ValueError("Could not render PDF page")
+                except Exception as pdf_err:
+                    if not self.preview_window:
+                        warning_dialog = WarningDialog(
+                            title="Warning",
+                            message=_(f"Could not preview PDF: {pdf_err}"),
+                        )
+                        warning_dialog.show()
+                    return
+            else:
+                # Handle regular image files
+                img = Image.open(file_path).convert("RGBA")
 
-                # Create layer with scale
-                layer = self.create_watermark_layer(
-                    img.width, img.height, watermark_text, scale_factor=scale
+            # Resize if needed
+            width, height = img.size
+            if max(width, height) > PREVIEW_MAX:
+                scale = PREVIEW_MAX / max(width, height)
+                new_size = (int(width * scale), int(height * scale))
+                img = img.resize(new_size, Image.LANCZOS)
+
+            # Prepare text
+            watermark_text = self.watermark_entry.get_text()
+            if not watermark_text:
+                watermark_text = "Preview"
+
+            # Create layer with scale
+            layer = self.create_watermark_layer(
+                img.width, img.height, watermark_text, scale_factor=scale
+            )
+            img.alpha_composite(layer)
+
+            # Save to temp
+            temp_dir = os.path.join(tempfile.gettempdir(), "watermark_app")
+            os.makedirs(temp_dir, exist_ok=True)
+            self.preview_temp_path = os.path.join(temp_dir, "preview.jpg")
+            img.convert("RGB").save(self.preview_temp_path, "JPEG")
+
+            # Create window if needed
+            if not self.preview_window:
+                self.preview_window = ImageViewerWindow()
+                self.preview_window.connect("destroy", self.on_preview_destroyed)
+                self.preview_window.set_title(
+                    _("Preview") + " - " + os.path.basename(file_path)
                 )
-                img.alpha_composite(layer)
+                self.preview_window.show_all()
 
-                # Save to temp
-                temp_dir = os.path.join(tempfile.gettempdir(), "watermark_app")
-                os.makedirs(temp_dir, exist_ok=True)
-                self.preview_temp_path = os.path.join(temp_dir, "preview.jpg")
-                img.convert("RGB").save(self.preview_temp_path, "JPEG")
-
-                # Create window if needed
-                if not self.preview_window:
-                    self.preview_window = ImageViewerWindow()
-                    self.preview_window.connect("destroy", self.on_preview_destroyed)
-                    self.preview_window.set_title(
-                        _("Preview") + " - " + os.path.basename(file_path)
-                    )
-                    self.preview_window.show_all()
-
-                # Update window
-                if self.preview_window:
-                    # Update title in case file changed
-                    self.preview_window.set_title(
-                        _("Preview") + " - " + os.path.basename(file_path)
-                    )
-                    self.preview_window.load_images([self.preview_temp_path])
-                    self.preview_window.present()
+            # Update window
+            if self.preview_window:
+                # Update title in case file changed
+                self.preview_window.set_title(
+                    _("Preview") + " - " + os.path.basename(file_path)
+                )
+                self.preview_window.load_images([self.preview_temp_path])
+                self.preview_window.present()
 
         except Exception as e:
             print(f"Preview error: {e}")
@@ -1420,19 +1445,22 @@ class WatermarkApp(Gtk.Window):
             if file_size == 0:
                 raise ValueError(f"PDF file is empty: {pdf_path}")
 
-            # Try to open with strict=False to handle malformed PDFs
+            # Convert PDF to images using Poppler
+            # DPI 300 is a good balance between quality and processing speed
+            if progress_dialog:
+                progress_dialog.set_status(_("Converting PDF pages..."))
+                progress_dialog.pulse()
+
             try:
-                reader = PyPDF2.PdfReader(pdf_path, strict=False)
-            except Exception as read_err:
+                images = convert_from_path(pdf_path, dpi=300)
+            except Exception as convert_err:
                 raise ValueError(
-                    f"Cannot parse PDF file (possibly corrupted or invalid format): {read_err}"
+                    f"Cannot parse PDF file (possibly corrupted or invalid format): {convert_err}"
                 )
 
             # Validate the PDF has pages
-            if len(reader.pages) == 0:
+            if len(images) == 0:
                 raise ValueError("PDF has no pages")
-
-            writer = PyPDF2.PdfWriter()
 
             original_filename = os.path.basename(pdf_path)
             name_without_ext = os.path.splitext(original_filename)[0]
@@ -1453,45 +1481,66 @@ class WatermarkApp(Gtk.Window):
 
             output_path = os.path.join(decided_output_path, final_filename)
 
-            temp_pdf_dir = os.path.join("/tmp", str(uuid.uuid4()))
-            os.makedirs(temp_pdf_dir, exist_ok=True)
+            # Create temporary directory for processed images
+            temp_img_dir = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
+            os.makedirs(temp_img_dir, exist_ok=True)
 
-            for i, page in enumerate(reader.pages):
+            watermarked_images = []
+
+            # Process each page
+            for i, page_image in enumerate(images):
                 if progress_dialog:
                     progress_dialog.set_status(_(f"Processing page {i + 1}..."))
                     progress_dialog.pulse()
 
-                # Get page size in points (1 point = 1/72 inch)
-                # PIL usually assumes 72 DPI by default for PDF, or we can just map 1 pt = 1 px
-                width = float(page.mediabox.width)
-                height = float(page.mediabox.height)
+                # Convert PIL Image to RGBA
+                page_image = page_image.convert("RGBA")
+                width, height = page_image.size
 
-                # Generate watermark layer
-                # We treat points as pixels for drawing
-                layer_img = self.create_watermark_layer(
-                    int(width), int(height), text, progress_dialog
+                # Create watermark layer
+                watermark_layer = self.create_watermark_layer(
+                    width, height, text, progress_dialog
                 )
 
-                # Save layer as PDF
-                temp_layer_path = os.path.join(temp_pdf_dir, f"watermark_{i}.pdf")
-                layer_img.save(temp_layer_path, "PDF")
+                # Composite watermark onto page
+                watermarked_page = Image.alpha_composite(page_image, watermark_layer)
 
-                # Merge
-                try:
-                    watermark_reader = PyPDF2.PdfReader(temp_layer_path, strict=False)
-                    watermark_page = watermark_reader.pages[0]
+                # Convert back to RGB for PDF (PDF doesn't support transparency in same way)
+                watermarked_page_rgb = watermarked_page.convert("RGB")
+                watermarked_images.append(watermarked_page_rgb)
 
-                    page.merge_page(watermark_page)
-                    writer.add_page(page)
-                except Exception as merge_err:
-                    print(f"Error merging watermark on page {i + 1}: {merge_err}")
-                    # Add the page without watermark to avoid losing content
-                    writer.add_page(page)
+            # Create PDF from watermarked images using reportlab
+            if progress_dialog:
+                progress_dialog.set_status(_("Creating output PDF..."))
+                progress_dialog.pulse()
 
-            with open(output_path, "wb") as f:
-                writer.write(f)
+            # Use first image to get dimensions
+            first_img = watermarked_images[0]
+            img_width, img_height = first_img.size
+            # Convert pixels to points (72 points = 1 inch, 300 DPI)
+            page_width = (img_width / 300.0) * 72
+            page_height = (img_height / 300.0) * 72
 
-            shutil.rmtree(temp_pdf_dir)
+            c = canvas.Canvas(output_path, pagesize=(page_width, page_height))
+
+            for idx, img in enumerate(watermarked_images):
+                if progress_dialog:
+                    progress_dialog.set_status(_(f"Writing page {idx + 1}..."))
+                    progress_dialog.pulse()
+
+                # Save image temporarily
+                temp_img_path = os.path.join(temp_img_dir, f"page_{idx}.jpg")
+                img.save(temp_img_path, "JPEG", quality=95)
+
+                # Draw image on PDF page
+                c.drawImage(temp_img_path, 0, 0, width=page_width, height=page_height)
+                c.showPage()
+
+            c.save()
+
+            # Cleanup temporary directory
+            shutil.rmtree(temp_img_dir)
+
             return output_path
 
         except FileNotFoundError as err:

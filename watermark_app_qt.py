@@ -11,7 +11,9 @@ import pathlib
 import uuid
 import shutil
 import tempfile
-import PyPDF2
+from pdf2image import convert_from_path
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 
 # Check for PyQt6
 try:
@@ -172,7 +174,34 @@ class ImageViewerWindow(QMainWindow):
 
     def display_single_image(self, image_path):
         self.file_label.setText(image_path)
-        pixmap = QPixmap(image_path)
+
+        # Check if it's a PDF file
+        if image_path.lower().endswith(".pdf"):
+            # Convert first page of PDF to image for display
+            try:
+                images = convert_from_path(
+                    image_path, dpi=150, first_page=1, last_page=1
+                )
+                if images:
+                    # Save to temporary file
+                    temp_dir = os.path.join(tempfile.gettempdir(), "watermark_app")
+                    os.makedirs(temp_dir, exist_ok=True)
+                    temp_image_path = os.path.join(
+                        temp_dir, f"pdf_view_{os.path.basename(image_path)}.jpg"
+                    )
+                    images[0].save(temp_image_path, "JPEG")
+                    # Load the temporary image
+                    pixmap = QPixmap(temp_image_path)
+                else:
+                    self.image_label.setText("Could not render PDF page")
+                    return
+            except Exception as pdf_err:
+                self.image_label.setText(f"Error loading PDF: {pdf_err}")
+                return
+        else:
+            # Load regular image
+            pixmap = QPixmap(image_path)
+
         if not pixmap.isNull():
             # Scale if too big
             view_size = self.scroll_area.size()
@@ -671,13 +700,8 @@ class WatermarkApp(QMainWindow):
 
             p_dialog.close()
 
-            has_pdf = any(f.lower().endswith(".pdf") for f in self.all_images)
-            if has_pdf:
-                QMessageBox.information(
-                    self, _("Success"), f"Generated file(s):\n{self.all_images}"
-                )
-                self.all_images = []
-            elif self.all_images:
+            # Display all results (images and PDFs)
+            if self.all_images:
                 self.main_display_images(self.all_images)
                 self.all_images = []
 
@@ -792,19 +816,21 @@ class WatermarkApp(QMainWindow):
             if file_size == 0:
                 raise ValueError(f"PDF file is empty: {pdf_path}")
 
-            # Try to open with strict=False to handle malformed PDFs
+            # Convert PDF to images using Poppler
+            # DPI 300 is a good balance between quality and processing speed
+            if progress_dialog:
+                progress_dialog.set_status("Converting PDF pages...")
+
             try:
-                reader = PyPDF2.PdfReader(pdf_path, strict=False)
-            except Exception as read_err:
+                images = convert_from_path(pdf_path, dpi=300)
+            except Exception as convert_err:
                 raise ValueError(
-                    f"Cannot parse PDF file (possibly corrupted or invalid format): {read_err}"
+                    f"Cannot parse PDF file (possibly corrupted or invalid format): {convert_err}"
                 )
 
             # Validate the PDF has pages
-            if len(reader.pages) == 0:
+            if len(images) == 0:
                 raise ValueError("PDF has no pages")
-
-            writer = PyPDF2.PdfWriter()
 
             original_filename = os.path.basename(pdf_path)
             name_without_ext = os.path.splitext(original_filename)[0]
@@ -823,35 +849,63 @@ class WatermarkApp(QMainWindow):
 
             output_path = os.path.join(decided_output_path, final_filename)
 
-            temp_pdf_dir = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
-            os.makedirs(temp_pdf_dir, exist_ok=True)
+            # Create temporary directory for processed images
+            temp_img_dir = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
+            os.makedirs(temp_img_dir, exist_ok=True)
 
-            for i, page in enumerate(reader.pages):
+            watermarked_images = []
+
+            # Process each page
+            for i, page_image in enumerate(images):
                 if progress_dialog:
                     progress_dialog.set_status(f"Processing page {i + 1}...")
 
-                width = float(page.mediabox.width)
-                height = float(page.mediabox.height)
+                # Convert PIL Image to RGBA
+                page_image = page_image.convert("RGBA")
+                width, height = page_image.size
 
-                layer_img = self.create_watermark_layer(
-                    int(width), int(height), text, progress_dialog
+                # Create watermark layer
+                watermark_layer = self.create_watermark_layer(
+                    width, height, text, progress_dialog
                 )
-                temp_layer_path = os.path.join(temp_pdf_dir, f"watermark_{i}.pdf")
-                layer_img.save(temp_layer_path, "PDF")
 
-                try:
-                    watermark_reader = PyPDF2.PdfReader(temp_layer_path, strict=False)
-                    page.merge_page(watermark_reader.pages[0])
-                    writer.add_page(page)
-                except Exception as merge_err:
-                    print(f"Error merging watermark on page {i + 1}: {merge_err}")
-                    # Add the page without watermark to avoid losing content
-                    writer.add_page(page)
+                # Composite watermark onto page
+                watermarked_page = Image.alpha_composite(page_image, watermark_layer)
 
-            with open(output_path, "wb") as f:
-                writer.write(f)
+                # Convert back to RGB for PDF (PDF doesn't support transparency in same way)
+                watermarked_page_rgb = watermarked_page.convert("RGB")
+                watermarked_images.append(watermarked_page_rgb)
 
-            shutil.rmtree(temp_pdf_dir)
+            # Create PDF from watermarked images using reportlab
+            if progress_dialog:
+                progress_dialog.set_status("Creating output PDF...")
+
+            # Use first image to get dimensions
+            first_img = watermarked_images[0]
+            img_width, img_height = first_img.size
+            # Convert pixels to points (72 points = 1 inch, 300 DPI)
+            page_width = (img_width / 300.0) * 72
+            page_height = (img_height / 300.0) * 72
+
+            c = canvas.Canvas(output_path, pagesize=(page_width, page_height))
+
+            for idx, img in enumerate(watermarked_images):
+                if progress_dialog:
+                    progress_dialog.set_status(f"Writing page {idx + 1}...")
+
+                # Save image temporarily
+                temp_img_path = os.path.join(temp_img_dir, f"page_{idx}.jpg")
+                img.save(temp_img_path, "JPEG", quality=95)
+
+                # Draw image on PDF page
+                c.drawImage(temp_img_path, 0, 0, width=page_width, height=page_height)
+                c.showPage()
+
+            c.save()
+
+            # Cleanup temporary directory
+            shutil.rmtree(temp_img_dir)
+
             return output_path
         except FileNotFoundError as e:
             error_msg = f"File not found: {e}"
@@ -925,38 +979,53 @@ class WatermarkApp(QMainWindow):
             return
 
         file_path = self.selected_files_path[0]
-        if self.check_if_pdf(file_path):
-            QMessageBox.warning(
-                self, "Warning", _("Preview not supported for PDF files")
-            )
-            return
 
         try:
             PREVIEW_MAX = 800
-            with Image.open(file_path).convert("RGBA") as img:
-                width, height = img.size
-                scale = 1.0
-                if max(width, height) > PREVIEW_MAX:
-                    scale = PREVIEW_MAX / max(width, height)
-                    img = img.resize(
-                        (int(width * scale), int(height * scale)), Image.LANCZOS
+
+            # Handle PDF files
+            if self.check_if_pdf(file_path):
+                # Convert first page of PDF to image for preview
+                try:
+                    images = convert_from_path(
+                        file_path, dpi=150, first_page=1, last_page=1
                     )
+                    if images:
+                        img = images[0].convert("RGBA")
+                    else:
+                        raise ValueError("Could not render PDF page")
+                except Exception as pdf_err:
+                    QMessageBox.warning(
+                        self, "Warning", f"Could not preview PDF: {pdf_err}"
+                    )
+                    return
+            else:
+                # Handle regular image files
+                img = Image.open(file_path).convert("RGBA")
 
-                text = self.watermark_entry.text() or "Preview"
-                layer = self.create_watermark_layer(
-                    img.width, img.height, text, scale_factor=scale
+            width, height = img.size
+            scale = 1.0
+            if max(width, height) > PREVIEW_MAX:
+                scale = PREVIEW_MAX / max(width, height)
+                img = img.resize(
+                    (int(width * scale), int(height * scale)), Image.LANCZOS
                 )
-                img.alpha_composite(layer)
 
-                temp_dir = os.path.join(tempfile.gettempdir(), "watermark_app")
-                os.makedirs(temp_dir, exist_ok=True)
-                preview_path = os.path.join(temp_dir, "preview.jpg")
-                img.convert("RGB").save(preview_path, "JPEG")
+            text = self.watermark_entry.text() or "Preview"
+            layer = self.create_watermark_layer(
+                img.width, img.height, text, scale_factor=scale
+            )
+            img.alpha_composite(layer)
 
-                if not self.preview_window:
-                    self.preview_window = ImageViewerWindow()
-                self.preview_window.load_images([preview_path])
-                self.preview_window.show()
+            temp_dir = os.path.join(tempfile.gettempdir(), "watermark_app")
+            os.makedirs(temp_dir, exist_ok=True)
+            preview_path = os.path.join(temp_dir, "preview.jpg")
+            img.convert("RGB").save(preview_path, "JPEG")
+
+            if not self.preview_window:
+                self.preview_window = ImageViewerWindow()
+            self.preview_window.load_images([preview_path])
+            self.preview_window.show()
 
         except Exception as e:
             QMessageBox.critical(self, "Preview Error", str(e))
