@@ -726,14 +726,14 @@ class WatermarkApp(Gtk.Window):
     def set_default_font(self):
         if platform.system() == "Windows":
             self.default_font_description = Pango.FontDescription.from_string(
-                "Arial 20"
+                "Arial 32"
             )
             self.font_base_name = "arial.ttf"
             self.font_chooser_button.set_label("Arial 20")
             print("Default font set to Arial on Windows.")
         else:
             self.default_font_description = Pango.FontDescription.from_string(
-                "DejaVu Sans 20"
+                "DejaVu Sans 32"
             )  # vtks Rude Metal shadow 12") #DejaVu Sans 20")
             font_desc_str = self.default_font_description.to_string()
             font_path = self.find_font_file(self.default_font_description)
@@ -754,7 +754,7 @@ class WatermarkApp(Gtk.Window):
                 label = self.font_chooser_button.get_child()
                 label.set_text(font_desc_str)
                 label.override_font(temp_font)
-                # Force default font Size to 20
+                # Force default font Size to 32
                 self.default_font_description.set_size(
                     self.init_real_size * Pango.SCALE
                 )
