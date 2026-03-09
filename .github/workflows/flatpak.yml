@@ -26,8 +26,8 @@ jobs:
       - name: Build Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
-          bundle: virtui-manager.flatpak
-          manifest-path: flathub/io.github.aginies.virtui-manager.yml
+          bundle: watermark.flatpak
+          manifest-path: io.github.aginies.watermark.yml
           cache-key: flatpak-builder-${{ github.sha }}
           
       - name: Upload artifact
@@ -40,4 +40,4 @@ jobs:
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v1
         with:
-          files: virtui-manager.flatpak
+          files: watermark.flatpak
