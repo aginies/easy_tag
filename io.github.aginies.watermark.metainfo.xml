@@ -51,11 +51,10 @@
      JPG compression level, image resize</li>
      <li>Supported languages: FR, EN, ES, NL, RU</li>
      </ul>
-     <p>Bug fixes</p>
+     <p>New Features</p>
      <ul>
-     <li>Force saving files into Pictures directory</li>
-     <li>Fix issue not showing image with correct aspect ratio</li>
-     <li>Swith density to percentage</li>
+     <li>Preview for PDF and Images</li>
+     <li>Final rendering support now PDF</li>
     </ul>
    </description>
   </release>
