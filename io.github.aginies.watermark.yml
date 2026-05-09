@@ -1,7 +1,7 @@
 app-id: io.github.aginies.watermark
-runtime: 'org.freedesktop.Platform'
-runtime-version: '24.08'
-sdk: 'org.freedesktop.Sdk'
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
 command: watermark_app
 finish-args:
   - --share=ipc
@@ -9,18 +9,21 @@ finish-args:
   - --socket=fallback-x11
   - --device=dri
   - --filesystem=xdg-pictures
+cleanup:
+  - '*.pot'
+  - '*.po'
 modules:
   - python3-modules.json
   - name: watermark_app
     buildsystem: simple
     build-commands:
       - install -Dm755 watermark_app_gtk.py /app/bin/watermark_app
-      - install -Dm644 io.github.aginies.watermark.png /app/share/icons/hicolor/256x256/apps/io.github.aginies.watermark.png
-      - install -Dm644 io.github.aginies.watermark.desktop /app/share/applications/io.github.aginies.watermark.desktop
-      - cp -a locale /app/share/
-      - mkdir /app/share/metainfo/
-      - install -Dm0644 io.github.aginies.watermark.metainfo.xml /app/share/metainfo/
+      - mkdir -p /app/share/locale/
+      - cp -av locale /app/share/
+      - install -Dm644 io.github.aginies.watermark.png -t /app/share/icons/hicolor/256x256/apps/
+      - install -Dm644 io.github.aginies.watermark.desktop -t /app/share/applications/
+      - install -Dm644 io.github.aginies.watermark.metainfo.xml -t /app/share/metainfo/
     sources:
       - type: archive
-        url: https://github.com/aginies/watermark/archive/refs/tags/RC2_5.0.tar.gz
-        sha256: 40991c44b318bb51ed3824a5a1601770e441a59be35b12fb3bd1d9da9398d662
+        url: https://github.com/aginies/watermark/archive/refs/tags/4.8.tar.gz
+        sha256: 7b2dee2d67262caccbd88e09e7b41fef8ca246efe3d388954a825f4935390f27
